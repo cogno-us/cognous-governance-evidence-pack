@@ -29,3 +29,7 @@ or current retry permission. Candidate selection remains a separate owner decisi
 The hub selected lock/profiles remain unchanged; both authorizations remain false,
 operational trust and publication/production HOLD. C0 check-to-commit limits,
 optional cooperative same-host C1 and no C2/C3/real settlement remain explicit.
+
+S0 review refinement: historical supported revision sets remain byte-for-byte
+unchanged. The new transformation emits its own singleton compatibility sets;
+adding support must not retroactively relabel historical package compatibility.

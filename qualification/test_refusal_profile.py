@@ -12,6 +12,7 @@ def test_exact_refusal_evidence_survives_pack_revalidation(actual,change):
     trace=pack.metadata['traceable_import']
     assert trace['retained_sources']['reconstruction_bundle']==b
     assert trace['selected_revisions']==REFUSAL_REVISIONS
+    assert trace['supported_revision_sets']=={k:[v] for k,v in REFUSAL_REVISIONS.items()}
     assert trace['transformation_version']==REFUSAL_TRANSFORMATION_VERSION
 
 @pytest.mark.parametrize('change',['drop-refusal','substitute-effect','erase-floors','promote-status'])

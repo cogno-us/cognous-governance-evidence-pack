@@ -67,9 +67,9 @@ REFUSAL_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.3-refu
 ALL_CONTROL_PLANE_V2_REVISIONS = (*CONTROL_PLANE_V2_REVISIONS, MERGED_REVISIONS["control_plane"], REFUSAL_REVISIONS["control_plane"])
 SUPPORTED_REVISION_SETS = {
     "manifest": [MANIFEST_REVISION],
-    "replay": [REPLAY_REVISION, V2_REVISIONS["replay"], ACCEPTED_REPLAY_PERSISTENCE_REVISION, MERGED_REVISIONS["replay"], REFUSAL_REVISIONS["replay"]],
-    "control_plane": [CONTROL_PLANE_REVISION, *ALL_CONTROL_PLANE_V2_REVISIONS],
-    "moltbot_safe": [LEGACY_MOLTBOT_SAFE_REVISION, MOLTBOT_SAFE_REVISION, V2_REVISIONS["moltbot_safe"], MERGED_REVISIONS["moltbot_safe"], REFUSAL_REVISIONS["moltbot_safe"]],
+    "replay": [REPLAY_REVISION, V2_REVISIONS["replay"], ACCEPTED_REPLAY_PERSISTENCE_REVISION, MERGED_REVISIONS["replay"]],
+    "control_plane": [CONTROL_PLANE_REVISION, *CONTROL_PLANE_V2_REVISIONS, MERGED_REVISIONS["control_plane"]],
+    "moltbot_safe": [LEGACY_MOLTBOT_SAFE_REVISION, MOLTBOT_SAFE_REVISION, V2_REVISIONS["moltbot_safe"], MERGED_REVISIONS["moltbot_safe"]],
 }
 PRODUCER_REVISIONS = {"1.0.0": MOLTBOT_SAFE_REVISION, "2.0.0": V2_REVISIONS["moltbot_safe"]}
 
@@ -1137,7 +1137,7 @@ def import_manifest_reconstruction(manifest: dict[str, Any], reconstruction_bund
         selected = REFUSAL_REVISIONS if _is_refusal_v2(bundle) else MERGED_REVISIONS if _is_merged_v2(bundle) else PERSISTENCE_REVISIONS if _is_persistence_v2(bundle) else V2_REVISIONS
         trace["supported_revisions"].update(selected)
         if _is_persistence_v2(bundle) or _is_refusal_v2(bundle):
-            trace["supported_revision_sets"] = deepcopy(SUPPORTED_REVISION_SETS)
+            trace["supported_revision_sets"] = ({k: [v] for k, v in REFUSAL_REVISIONS.items()} if _is_refusal_v2(bundle) else deepcopy(SUPPORTED_REVISION_SETS))
             selected_profiles = {
                 p.get("repository"): p.get("revision")
                 for p in bundle.get("producer_profiles", [])
