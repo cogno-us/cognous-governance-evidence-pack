@@ -62,7 +62,7 @@ PERSISTENCE_REVISIONS = {
 }
 MERGED_REVISIONS = {"manifest": MANIFEST_REVISION, "replay": "459e4ba62fca49364aebb0050cd5fb2dd5a71bfa", "control_plane": "d3dadee70bd319812b207389ab1e0f6efe511916", "moltbot_safe": "c3c3ee7188b9367cf70b08074b9c40a5c70c94ac"}
 MERGED_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.2"
-REFUSAL_REVISIONS = {"manifest": MANIFEST_REVISION, "replay": "24fa957142f3dda73cbfc29850e68529e5fed9b1", "control_plane": "c7f122ba3a6e39f9268a7163c99be3ee514cd97e", "moltbot_safe": "63bd4d8d33130de9cc1d3ab3031bd585f2b4e09e"}
+REFUSAL_REVISIONS = {"manifest": MANIFEST_REVISION, "replay": "83fbaf2a0f6f071aca1ea0af859eb8fc6385c26a", "control_plane": "c7f122ba3a6e39f9268a7163c99be3ee514cd97e", "moltbot_safe": "309e194c1b0a3de23e11e20133e6eaf88875e48a"}
 REFUSAL_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.3-refusal-candidate"
 ALL_CONTROL_PLANE_V2_REVISIONS = (*CONTROL_PLANE_V2_REVISIONS, MERGED_REVISIONS["control_plane"], REFUSAL_REVISIONS["control_plane"])
 SUPPORTED_REVISION_SETS = {
