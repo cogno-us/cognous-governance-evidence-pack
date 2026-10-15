@@ -2,8 +2,8 @@
 
 The nonselected mapping uses Control Plane
 `7aa98ac452de4619161bef177cdd9c07fc606f03`, runtime
-`12a54405efc627c9025542c5d45be80526a8adee`, and Replay
-`059ec9c80a0de0272a5315092f87944bafd8a8ce` with the existing Manifest
+`a9a4f75a9a880ba0ae2c3b5a01fcee0ae904e127`, and Replay
+`3ef89c8a2af880f6505f4db1ffbabbedffdc5e4d` with the existing Manifest
 `46c950bed37fe3812000895430bc0312d29e37ce`.
 Its transformation is `agep-manifest-reconstruction-import/0.3.4-runtime-authority-candidate`.
 Historical transformations and source pairings remain unchanged.
