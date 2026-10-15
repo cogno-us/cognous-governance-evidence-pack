@@ -1,4 +1,6 @@
 <!-- cognous-banner:start -->
+
+Cross-component test commands below now run in a disposable checkout assembled by the [qualification workflows](CROSS_COMPONENT_TESTS.md). Plain local test discovery covers the component-local tests retained here. Historical reports and dependency pins keep their original scope.
 ```text
 ──────────────────────────────────────────────────
    __________  _______   ______  __  _______
@@ -142,3 +144,7 @@ See the [repository rename map and compatibility notes](https://github.com/cogno
 ## Merged producer compatibility
 
 The exact merged Control Plane/executor pair has a versioned `agep-manifest-reconstruction-import/0.3.2` consumer mapping. See [qualification scope and pinned revisions](docs/merged-producer-compatibility.md). This covers the existing bounded export; atomic-claim and refund-intent evidence are not added.
+
+## Cross component qualification
+
+Executable integration suites and harnesses moved to the [qualification repository](https://github.com/cogno-us/cognous-stack-qualification/tree/39f038435afdd71ba162860faa5718d90d7bde64/suites/cognous-governance-evidence-pack). See [the path migration map](CROSS_COMPONENT_TESTS.md) for current commands and source identity rules. Component-local tests remain here; historical qualification results retain their original scope.
