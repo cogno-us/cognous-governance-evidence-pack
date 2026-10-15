@@ -65,8 +65,8 @@ MERGED_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.2"
 REFUSAL_REVISIONS = {"manifest": MANIFEST_REVISION, "replay": "83fbaf2a0f6f071aca1ea0af859eb8fc6385c26a", "control_plane": "c7f122ba3a6e39f9268a7163c99be3ee514cd97e", "moltbot_safe": "309e194c1b0a3de23e11e20133e6eaf88875e48a"}
 REFUSAL_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.3-refusal-candidate"
 RUNTIME_AUTHORITY_REVISIONS = {"manifest": MANIFEST_REVISION,
-    "replay": "3ef89c8a2af880f6505f4db1ffbabbedffdc5e4d",
-    "control_plane": "7aa98ac452de4619161bef177cdd9c07fc606f03",
+    "replay": "05345feeff343cc6195bc8f7f37a3eed25278969",
+    "control_plane": "2a17b2ba147462a592d9b1882aad09d8a3eb7904",
     "moltbot_safe": "a9a4f75a9a880ba0ae2c3b5a01fcee0ae904e127"}
 RUNTIME_AUTHORITY_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.4-runtime-authority-candidate"
 ALL_CONTROL_PLANE_V2_REVISIONS = (*CONTROL_PLANE_V2_REVISIONS, MERGED_REVISIONS["control_plane"], REFUSAL_REVISIONS["control_plane"], RUNTIME_AUTHORITY_REVISIONS["control_plane"])
