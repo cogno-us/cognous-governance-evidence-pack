@@ -18,9 +18,12 @@ The import path currently consumes a Manifest artifact and a Reconstruction Bund
 
 ## CLI
 
-`agep import` reads both files through the shared admission parser: the
-byte budget applies, and duplicate JSON keys and nonfinite numbers are
-rejected before any import checks run. It needs the pinned Replay semantic
+`agep import` reads both files through the shared admission parser before
+any import checks run. The 8 MiB byte budget, the depth limit (32) and the
+object/array node limit (100,000) apply. Duplicate JSON keys and the literal
+tokens `NaN`, `Infinity` and `-Infinity` are rejected. Out-of-range numeric
+literals such as `1e999` are not rejected; they parse as floating-point
+infinity. It needs the pinned Replay semantic
 validator (`cogno-us/cognous-replay-bundle` at
 `f63ce914504dd06813c4ccd199b0570dbd8dd427`) installed in the same
 environment. The working inputs are the pinned producer examples, the same
