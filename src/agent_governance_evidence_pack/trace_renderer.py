@@ -7,17 +7,16 @@ from .renderer import render_markdown
 
 def _escape(v: object) -> str:
     if v is None: return ""
-    return html_escape(str(v), quote=False).replace("|", "\\|").replace("\r", "&#13;").replace("\n", "&#10;").replace("`", "&#96;").replace("[", "&#91;").replace("]", "&#93;")
+    return html_escape("".join(c if ord(c) >= 32 and not 127 <= ord(c) <= 159 else f"&#{ord(c)};" for c in str(v)), quote=False).replace("|", "\\|").replace("\r", "&#13;").replace("\n", "&#10;").replace("`", "&#96;").replace("[", "&#91;").replace("]", "&#93;")
 def _or_dash(v: object) -> str: return "—" if v in (None,"",[],{}) else str(v)
 
 def render_traceable_markdown(pack: EvidencePack) -> str:
     base=render_markdown(pack); trace=pack.metadata.get("traceable_import") if isinstance(pack.metadata,dict) else None
     if not isinstance(trace,dict): return base
-    if trace.get("transformation_version") == "agep-manifest-reconstruction-import/0.3.0" or "retained_sources" in trace or (trace.get("executor_producer_contract") or {}).get("interface_profile_version") == "2.0.0":
-        from .validator import validate_evidence_pack
-        report = validate_evidence_pack(pack)
-        if any(issue.code == "E_TRACE_SEMANTICS" for issue in report.issues):
-            raise ValueError("Cannot render inconsistent traceable evidence")
+    from .validator import validate_evidence_pack
+    report = validate_evidence_pack(pack)
+    if not report.valid:
+        raise ValueError("Cannot render inconsistent traceable evidence")
     parts=[base.rstrip(),"","## 16. Traceability and Import Provenance",""]
     parts.append("This section is generated from `metadata.traceable_import`. It is review support only. It does not certify deployment approval, compliance, operational effectiveness, or independent audit."); parts.append("")
     def table(title,heads,rows,empty):

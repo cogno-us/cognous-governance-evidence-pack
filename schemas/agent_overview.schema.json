@@ -4,35 +4,55 @@
   "title": "AgentOverview",
   "description": "Overview of the agent being reviewed in an Agent Governance Evidence Pack.",
   "type": "object",
-  "required": ["agent_name", "business_purpose"],
+  "required": [
+    "agent_name",
+    "business_purpose"
+  ],
   "additionalProperties": false,
   "properties": {
     "agent_name": {
       "type": "string",
-      "description": "The name of the agent being reviewed."
+      "description": "The name of the agent being reviewed.",
+      "pattern": "\\S"
     },
     "agent_description": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "A short description of what this agent does."
     },
     "business_purpose": {
       "type": "string",
-      "description": "The business purpose this agent serves. Why does it exist?"
+      "description": "The business purpose this agent serves. Why does it exist?",
+      "pattern": "\\S"
     },
     "owner": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "The business or technical owner responsible for this agent."
     },
     "business_unit": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "The business unit that owns or operates this agent."
     },
     "user_population": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Description of the users or systems that interact with this agent."
     },
     "lifecycle_stage": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "The lifecycle stage of this agent (e.g., pilot, production, deprecated)."
     }
   }

@@ -7,7 +7,15 @@ Entry point: agep
 from __future__ import annotations
 
 import sys
+import builtins
 from pathlib import Path
+
+
+def print(*values, **kwargs):
+    def escaped(value):
+        return ''.join(c if ord(c) >= 32 and not 127 <= ord(c) <= 159
+                       else f"\\u{ord(c):04x}" for c in str(value))
+    builtins.print(*(escaped(v) for v in values), **kwargs)
 
 
 def _load_pack(path_str: str):
@@ -45,6 +53,10 @@ def cmd_summarize(args: list[str]) -> int:
     pack = _load_pack(args[0])
     from .summary import summarize_evidence_pack
     s = summarize_evidence_pack(pack)
+    print(f"semantic_validation_passed: {s['semantic_validation_passed']}")
+    if not s["semantic_validation_passed"]:
+        print("semantic_error_codes: " + ", ".join(s["semantic_error_codes"]))
+        return 1
     for key in ("pack_id", "title", "review_status", "agent_name", "environment", "tool_count", "action_count", "privileged_action_count", "replay_bundle_count", "open_risk_count", "critical_open_risk_count"):
         print(f"{key:25}: {s[key]}")
     trace = pack.metadata.get("traceable_import") if isinstance(pack.metadata, dict) else None

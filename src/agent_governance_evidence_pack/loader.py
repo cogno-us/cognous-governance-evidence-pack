@@ -10,6 +10,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from .models import EvidencePack
+from .admission import read_bytes, loads, admit_value
 
 
 def load_evidence_pack(path: str | Path) -> EvidencePack:
@@ -24,12 +25,12 @@ def load_evidence_pack(path: str | Path) -> EvidencePack:
         raise FileNotFoundError(f"Evidence pack file not found: {path}")
 
     try:
-        raw = path.read_text(encoding="utf-8")
+        raw = read_bytes(path)
     except OSError as exc:
         raise FileNotFoundError(f"Could not read evidence pack file: {path}") from exc
 
     try:
-        payload = json.loads(raw)
+        payload = loads(raw)
     except json.JSONDecodeError as exc:
         raise ValueError(
             f"Invalid JSON in evidence pack file '{path}': {exc}"
@@ -45,7 +46,7 @@ def load_evidence_pack_json(payload: dict) -> EvidencePack:
         ValueError: If the payload fails model validation.
     """
     try:
-        return EvidencePack.model_validate(payload)
+        return EvidencePack.model_validate(admit_value(payload))
     except ValidationError as exc:
         raise ValueError(
             f"Evidence pack validation error: {exc}"

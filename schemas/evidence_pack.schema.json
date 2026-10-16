@@ -4,12 +4,19 @@
   "title": "EvidencePack",
   "description": "An Agent Governance Evidence Pack: a business-facing structured document summarizing AI-agent runtime governance evidence for security, risk, compliance, audit, and executive review.",
   "type": "object",
-  "required": ["pack_id", "title", "generated_at", "agent_overview", "deployment_context"],
+  "required": [
+    "pack_id",
+    "title",
+    "generated_at",
+    "agent_overview",
+    "deployment_context"
+  ],
   "additionalProperties": false,
   "properties": {
     "pack_id": {
       "type": "string",
-      "description": "A unique identifier for this evidence pack."
+      "description": "A unique identifier for this evidence pack.",
+      "pattern": "\\S"
     },
     "pack_version": {
       "type": "string",
@@ -18,16 +25,25 @@
     },
     "title": {
       "type": "string",
-      "description": "A human-readable title for this evidence pack."
+      "description": "A human-readable title for this evidence pack.",
+      "pattern": "\\S"
     },
     "generated_at": {
       "type": "string",
-      "description": "When this evidence pack was generated (ISO 8601)."
+      "description": "When this evidence pack was generated (ISO 8601).",
+      "pattern": "\\S"
     },
     "review_status": {
       "type": "string",
       "description": "The current review status of this evidence pack.",
-      "enum": ["draft", "in_review", "approved", "approved_with_conditions", "rejected", "retired"],
+      "enum": [
+        "draft",
+        "in_review",
+        "approved",
+        "approved_with_conditions",
+        "rejected",
+        "retired"
+      ],
       "default": "draft"
     },
     "agent_overview": {
@@ -54,8 +70,12 @@
     },
     "authority_model": {
       "oneOf": [
-        { "$ref": "authority_model_summary.schema.json" },
-        { "type": "null" }
+        {
+          "$ref": "authority_model_summary.schema.json"
+        },
+        {
+          "type": "null"
+        }
       ],
       "description": "Summary of the authority model governing privileged actions."
     },
@@ -89,8 +109,12 @@
     },
     "validation_summary": {
       "oneOf": [
-        { "$ref": "validation_summary.schema.json" },
-        { "type": "null" }
+        {
+          "$ref": "validation_summary.schema.json"
+        },
+        {
+          "type": "null"
+        }
       ],
       "description": "Summary of validation results for replay bundles."
     },
@@ -120,5 +144,93 @@
       "description": "Additional metadata for extensibility.",
       "additionalProperties": true
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "review_status": {
+            "const": "approved"
+          }
+        },
+        "required": [
+          "review_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "review_records": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "decision": {
+                  "const": "approved"
+                },
+                "reviewer": {
+                  "type": "string",
+                  "pattern": "\\S"
+                },
+                "reviewed_at": {
+                  "type": "string",
+                  "pattern": "\\S"
+                }
+              },
+              "required": [
+                "decision",
+                "reviewer",
+                "reviewed_at"
+              ]
+            }
+          }
+        },
+        "required": [
+          "review_records"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "review_status": {
+            "const": "approved_with_conditions"
+          }
+        },
+        "required": [
+          "review_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "review_records": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "decision": {
+                  "const": "approved_with_conditions"
+                },
+                "reviewer": {
+                  "type": "string",
+                  "pattern": "\\S"
+                },
+                "reviewed_at": {
+                  "type": "string",
+                  "pattern": "\\S"
+                }
+              },
+              "required": [
+                "decision",
+                "reviewer",
+                "reviewed_at"
+              ]
+            }
+          }
+        },
+        "required": [
+          "review_records"
+        ]
+      }
+    }
+  ]
 }

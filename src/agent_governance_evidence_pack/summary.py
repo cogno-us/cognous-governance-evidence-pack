@@ -9,6 +9,8 @@ from .models import EvidencePack, RiskSeverity, RiskStatus, ValidationSeverity
 
 def summarize_evidence_pack(pack: EvidencePack) -> dict:
     """Return a summary dict with key counts and status fields."""
+    from .validator import validate_evidence_pack
+    report = validate_evidence_pack(pack)
     privileged_action_count = sum(
         1
         for a in pack.action_inventory
@@ -43,9 +45,11 @@ def summarize_evidence_pack(pack: EvidencePack) -> dict:
         validation_warning_count = pack.validation_summary.warning_count
 
     return {
+        "semantic_validation_passed": report.valid,
+        "semantic_error_codes": [i.code for i in report.issues if i.severity.value == "error"],
         "pack_id": pack.pack_id,
         "title": pack.title,
-        "review_status": pack.review_status.value,
+        "review_status": pack.review_status.value if report.valid else "invalid",
         "agent_name": pack.agent_overview.agent_name,
         "environment": pack.deployment_context.environment.value,
         "tool_count": len(pack.tool_inventory),

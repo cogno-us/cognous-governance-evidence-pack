@@ -53,6 +53,12 @@ def validate_evidence_pack(pack: EvidencePack) -> ValidationReport:
     Warnings do not affect validity.
     """
     issues: list[ValidationIssue] = []
+    from .admission import admit_value
+    try:
+        admit_value(pack.metadata)
+    except ValueError:
+        return ValidationReport(valid=False, pack_id=pack.pack_id,
+            issues=[_error("E_BUDGET", "Trace metadata exceeds admission budget", "metadata")])
 
     # ------------------------------------------------------------------ #
     # Errors
@@ -211,7 +217,9 @@ def validate_evidence_pack(pack: EvidencePack) -> ValidationReport:
         ReviewStatus.approved,
         ReviewStatus.approved_with_conditions,
     ):
-        if not pack.review_records:
+        if not any(record.decision == pack.review_status and record.reviewed_at
+                   and record.reviewed_at.strip() and record.reviewer.strip()
+                   for record in pack.review_records):
             issues.append(
                 _error(
                     "E015",
@@ -465,10 +473,12 @@ def validate_evidence_pack(pack: EvidencePack) -> ValidationReport:
                 )
             )
 
-    trace = pack.metadata.get("traceable_import", {})
-    if isinstance(trace, dict) and ("retained_sources" in trace or trace.get("transformation_version") == "agep-manifest-reconstruction-import/0.3.0" or (trace.get("executor_producer_contract") or {}).get("interface_profile_version") == "2.0.0"):
+    trace = pack.metadata.get("traceable_import")
+    if trace is not None:
         try:
             from .importer import import_manifest_reconstruction
+            if not isinstance(trace, dict):
+                raise ValueError("trace metadata must be an object")
             sources = trace["retained_sources"]
             expected = import_manifest_reconstruction(sources["manifest"], sources["reconstruction_bundle"],
                 title=pack.title, generated_at=pack.generated_at)
