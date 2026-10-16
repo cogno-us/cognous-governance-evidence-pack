@@ -11,6 +11,11 @@ def _escape(value: object) -> str:
     return html_escape("".join(c if ord(c) >= 32 and not 127 <= ord(c) <= 159 else f"&#{ord(c)};" for c in str(value)), quote=False).replace("|", "\\|").replace("\r", "&#13;").replace("\n", "&#10;").replace("`", "&#96;").replace("[", "&#91;").replace("]", "&#93;")
 
 
+A = " (asserted, unverified)"
+ASSERTION_NOTE = ("_These values are caller assertions recorded in the pack. They are not verified by this renderer: "
+                  "no reviewer identity, signature, redaction or validation result is checked._")
+
+
 def _yn(value: bool) -> str:
     return "Yes" if value else "No"
 
@@ -34,7 +39,7 @@ def render_markdown(pack: EvidencePack) -> str:
         f"| Pack ID | {_escape(pack.pack_id)} |",
         f"| Version | {_escape(pack.pack_version)} |",
         f"| Generated At | {_escape(pack.generated_at)} |",
-        f"| Review Status | {_escape(pack.review_status.value)} |",
+        f"| Review Status{A} | {_escape(pack.review_status.value)} |",
         f"| Agent | {_escape(pack.agent_overview.agent_name)} |",
         f"| Environment | {_escape(pack.deployment_context.environment.value)} |",
         f"| Owner | {_escape(_or_dash(pack.agent_overview.owner))} |",
@@ -48,7 +53,7 @@ def render_markdown(pack: EvidencePack) -> str:
     parts.append("")
     if pack.validation_summary:
         v = pack.validation_summary
-        parts.append(f"Validation summary: {v.valid_bundle_count} valid bundle(s), {v.invalid_bundle_count} invalid bundle(s), {v.error_count} error(s), {v.warning_count} warning(s).")
+        parts.append(f"Validation summary{A}: {v.valid_bundle_count} valid bundle(s), {v.invalid_bundle_count} invalid bundle(s), {v.error_count} error(s), {v.warning_count} warning(s).")
         if v.summary:
             parts.append(_escape(v.summary))
     else:
@@ -68,9 +73,11 @@ def render_markdown(pack: EvidencePack) -> str:
     kv("2. Agent Overview", [("Agent Name", pack.agent_overview.agent_name), ("Description", pack.agent_overview.agent_description), ("Business Purpose", pack.agent_overview.business_purpose), ("Owner", pack.agent_overview.owner), ("Business Unit", pack.agent_overview.business_unit), ("User Population", pack.agent_overview.user_population), ("Lifecycle Stage", pack.agent_overview.lifecycle_stage)])
     kv("3. Deployment Context", [("Environment", pack.deployment_context.environment.value), ("Deployment Name", pack.deployment_context.deployment_name), ("Deployment Date", pack.deployment_context.deployment_date), ("Systems Touched", ", ".join(pack.deployment_context.systems_touched) or None), ("Data Domains", ", ".join(pack.deployment_context.data_domains) or None), ("Geographic Scope", pack.deployment_context.geographic_scope), ("Notes", pack.deployment_context.notes)])
 
-    def table(title: str, heads: list[str], rows: list[list[object]], empty: str) -> None:
+    def table(title: str, heads: list[str], rows: list[list[object]], empty: str, note: str | None = None) -> None:
         parts.append(f"## {title}\n")
         if rows:
+            if note:
+                parts.append(note + "\n")
             parts.append("| " + " | ".join(heads) + " |")
             parts.append("|" + "|".join(["---"] * len(heads)) + "|")
             for row in rows:
@@ -88,18 +95,19 @@ def render_markdown(pack: EvidencePack) -> str:
     table("7. Policy Controls", ["Control Name", "Description", "Status", "Evidence Reference"], [[p.control_name, p.description, p.control_status.value, p.evidence_reference] for p in pack.policy_controls], "No policy controls recorded.")
     table("8. Blocked-Action Summary", ["Action Name", "Action Type", "Tool", "Count", "Reason Summary", "Evidence Reference"], [[b.action_name, b.action_type.value if b.action_type else None, b.tool_name, b.count, b.reason_summary, b.evidence_reference] for b in pack.blocked_actions], "No blocked actions recorded.")
     table("9. Reliance Summary", ["Source Name", "Source Type", "Count", "Scope Summary", "Evidence Reference"], [[r.source_name, r.source_type, r.count, r.scope_summary, r.evidence_reference] for r in pack.reliance_summary], "No reliance records recorded.")
-    table("10. Replay Bundle Inventory", ["Bundle ID", "Run ID", "Status", "Generated At", "Signed", "Redacted", "Validation Status", "Evidence Reference"], [[r.bundle_id, r.run_id, r.status, r.generated_at, _yn(r.signed), _yn(r.redacted), r.validation_status, r.evidence_reference] for r in pack.replay_bundles], "No replay bundles recorded.")
+    table("10. Replay Bundle Inventory", ["Bundle ID", "Run ID", "Status", "Generated At", f"Signed{A}", f"Redacted{A}", f"Validation Status{A}", "Evidence Reference"], [[r.bundle_id, r.run_id, r.status, r.generated_at, _yn(r.signed), _yn(r.redacted), r.validation_status, r.evidence_reference] for r in pack.replay_bundles], "No replay bundles recorded.", ASSERTION_NOTE)
     parts.append("## 11. Validation Summary\n")
     if pack.validation_summary:
         v = pack.validation_summary
+        parts.append(ASSERTION_NOTE + "\n")
         parts.append(f"**Valid Bundles:** {v.valid_bundle_count} | **Invalid Bundles:** {v.invalid_bundle_count} | **Errors:** {v.error_count} | **Warnings:** {v.warning_count}\n")
         if v.summary:
             parts.append(f"{_escape(v.summary)}\n")
     else:
         parts.append("No validation summary recorded.")
     parts.append("")
-    table("12. Redaction and Export Summary", ["Export ID", "Type", "Redacted Fields", "Generated At", "Intended Recipient", "Evidence Reference"], [[e.export_id, e.export_type, ", ".join(e.redacted_fields), e.generated_at, e.intended_recipient, e.evidence_reference] for e in pack.redaction_exports], "No redaction or export records recorded.")
+    table("12. Redaction and Export Summary", ["Export ID", "Type", "Redacted Fields", "Generated At", "Intended Recipient", "Evidence Reference"], [[e.export_id, e.export_type, ", ".join(e.redacted_fields), e.generated_at, e.intended_recipient, e.evidence_reference] for e in pack.redaction_exports], "No redaction or export records recorded.", ASSERTION_NOTE)
     table("13. Risk Register", ["Risk ID", "Title", "Severity", "Status", "Mitigation", "Owner", "Evidence Reference"], [[r.risk_id, r.title, r.severity.value, r.status.value, r.mitigation, r.owner, r.evidence_reference] for r in pack.risk_register], "No risks recorded. Missing incident records do not prove that no incidents occurred.")
-    table("14. Review Records", ["Reviewer", "Role", "Reviewed At", "Decision", "Notes"], [[r.reviewer, r.reviewer_role, r.reviewed_at, r.decision.value, r.notes] for r in pack.review_records], "No review records recorded. Default review status remains unreviewed/draft unless supplied by an attributable human reviewer.")
+    table("14. Review Records", ["Reviewer", "Role", "Reviewed At", f"Decision{A}", "Notes"], [[r.reviewer, r.reviewer_role, r.reviewed_at, r.decision.value, r.notes] for r in pack.review_records], "No review records recorded. Default review status remains unreviewed/draft unless supplied by an attributable human reviewer.", ASSERTION_NOTE)
     parts.extend(["## 15. Known Limitations\n", "This evidence pack summarizes available runtime and governance records. It does not prove that model outputs are correct, policy controls are sufficient, compliance obligations are satisfied, deployment is approved, controls are operationally effective, or independent audit has occurred. Schema validity and successful reconstruction are review aids only.", ""])
     return "\n".join(parts)
