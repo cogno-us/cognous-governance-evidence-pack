@@ -8,7 +8,7 @@ from .summary import summarize_evidence_pack
 def _escape(value: object) -> str:
     if value is None:
         return ""
-    return html_escape(str(value), quote=False).replace("|", "\\|").replace("\r", "&#13;").replace("\n", "&#10;").replace("`", "&#96;").replace("[", "&#91;").replace("]", "&#93;")
+    return html_escape("".join(c if ord(c) >= 32 and not 127 <= ord(c) <= 159 else f"&#{ord(c)};" for c in str(value)), quote=False).replace("|", "\\|").replace("\r", "&#13;").replace("\n", "&#10;").replace("`", "&#96;").replace("[", "&#91;").replace("]", "&#93;")
 
 
 def _yn(value: bool) -> str:
@@ -25,6 +25,8 @@ def _or_dash(value: object) -> str:
 def render_markdown(pack: EvidencePack) -> str:
     parts: list[str] = []
     summary = summarize_evidence_pack(pack)
+    if not summary["semantic_validation_passed"]:
+        raise ValueError("Cannot render semantically invalid evidence pack")
     parts.append(f"# {_escape(pack.title)}\n")
     parts.extend([
         "| Field | Value |",

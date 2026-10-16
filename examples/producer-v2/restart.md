@@ -18,7 +18,7 @@
 The pack records **1** tool(s), **2** action(s), **2** privileged/review-sensitive action(s), and **1** replay/reconstruction bundle reference(s).
 
 Validation summary: 1 valid bundle(s), 0 invalid bundle(s), 0 error(s), 1 warning(s).
-Source artifacts passed supported semantic import checks. This does not establish deployment approval, compliance, operational effectiveness, or independent audit.
+Source artifacts were evaluated by supported semantic import checks; inspect the actual findings. This does not establish deployment approval, compliance, operational effectiveness, or independent audit.
 
 No open risks recorded. Absence of incident records does not prove absence of incidents.
 
@@ -105,13 +105,13 @@ No reliance records recorded.
 
 | Bundle ID | Run ID | Status | Generated At | Signed | Redacted | Validation Status | Evidence Reference |
 |---|---|---|---|---|---|---|---|
-| 08253326-2e03-438c-815b-7e0fbd485ed6 | run-1 | reconstruction_complete | 2026-10-06T23:33:40.586195+00:00 | No | No | semantically_valid | metadata.traceable_import.source_record_refs |
+| 08253326-2e03-438c-815b-7e0fbd485ed6 | run-1 | validated_complete | 2026-10-06T23:33:40.586195+00:00 | No | No | semantically_valid | metadata.traceable_import.source_record_refs |
 
 ## 11. Validation Summary
 
 **Valid Bundles:** 1 | **Invalid Bundles:** 0 | **Errors:** 0 | **Warnings:** 1
 
-Source artifacts passed supported semantic import checks. This does not establish deployment approval, compliance, operational effectiveness, or independent audit.
+Source artifacts were evaluated by supported semantic import checks; inspect the actual findings. This does not establish deployment approval, compliance, operational effectiveness, or independent audit.
 
 
 ## 12. Redaction and Export Summary
@@ -219,7 +219,7 @@ Counting rules:
 | REPLAY_M004 | info | moltbot.execution_envelope.operation.authority_context_id | At the pinned adapter this field carries the proposal profile reference; it is distinct from the Control Plane binding context-instance ID. |
 | REPLAY_B020 | info | reconciliations | Historical rejected/unavailable observations are fully retained. This finding does not determine latest delivery state or reconstruction completeness. |
 | REPLAY_SEMANTIC_LIMITATION | info | semantics.notes | Replay reconstructs recorded events only; import never renews permission or creates an effect. |
-| R_REDACTION_STATE_UNKNOWN | warning | reconstruction_bundle.derivation\|metadata.redaction | Source did not declare redaction state; EvidencePack boolean defaults to false for schema compatibility. |
+| R_REDACTION_UNVERIFIED | warning | — | Source declarations do not verify removal of sensitive content; export safety is unverified. |
 
 ### Unresolved issues
 
@@ -1268,7 +1268,7 @@ The following is the complete trace metadata without truncation. Null observatio
   },
   "redaction_state": {
     "redacted": false,
-    "source": "unknown_schema_default_false",
+    "source": "unverified_source_claim",
     "derivation": null
   },
   "import_findings": [
@@ -1303,10 +1303,9 @@ The following is the complete trace metadata without truncation. Null observatio
       "message": "Replay reconstructs recorded events only; import never renews permission or creates an effect."
     },
     {
-      "code": "R_REDACTION_STATE_UNKNOWN",
+      "code": "R_REDACTION_UNVERIFIED",
       "severity": "warning",
-      "path": "reconstruction_bundle.derivation|metadata.redaction",
-      "message": "Source did not declare redaction state; EvidencePack boolean defaults to false for schema compatibility."
+      "message": "Source declarations do not verify removal of sensitive content; export safety is unverified."
     }
   ],
   "manual_assessments": [],

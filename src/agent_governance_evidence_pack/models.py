@@ -7,7 +7,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class DeploymentEnvironment(str, Enum):
@@ -364,6 +364,12 @@ class ReviewRecord(BaseModel):
 
 
 class EvidencePack(BaseModel):
+    @model_validator(mode="before")
+    @classmethod
+    def admit_bounded_input(cls, value):
+        from .admission import admit_value
+        return admit_value(value)
+
     pack_id: str = Field(description="A unique identifier for this evidence pack.")
     pack_version: str = Field(
         default="0.1", description="The version of the evidence pack format."
