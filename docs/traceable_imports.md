@@ -18,14 +18,34 @@ The import path currently consumes a Manifest artifact and a Reconstruction Bund
 
 ## CLI
 
+`agep import` reads both files through the shared admission parser: the
+byte budget applies, and duplicate JSON keys and nonfinite numbers are
+rejected before any import checks run. It needs the pinned Replay semantic
+validator (`cogno-us/cognous-replay-bundle` at
+`f63ce914504dd06813c4ccd199b0570dbd8dd427`) installed in the same
+environment. The working inputs are the pinned producer examples, the same
+ones CI imports:
+
 ```bash
+# upstream/manifest = cogno-us/cognous-action-manifest @ 46c950bed37fe3812000895430bc0312d29e37ce
+# upstream/replay   = cogno-us/cognous-replay-bundle   @ f63ce914504dd06813c4ccd199b0570dbd8dd427
+pip install -e upstream/replay
 agep import \
-  --manifest examples/import_inputs/traceable_manifest.json \
-  --reconstruction examples/import_inputs/traceable_reconstruction_bundle.json \
+  --manifest upstream/manifest/examples/refund_integration_v1_1.manifest.json \
+  --reconstruction upstream/replay/examples/bounded_success_reconstruction_v0_2.json \
   --out /tmp/traceable_imported_evidence_pack.json \
-  --render /tmp/traceable_imported_evidence_pack.md \
-  --generated-at 2026-10-05T00:00:00Z
+  --render /tmp/traceable_imported_evidence_pack.md
+agep validate /tmp/traceable_imported_evidence_pack.json
 ```
+
+`agep import` has no `--generated-at` option. The importer takes the
+generation time from the reconstruction bundle and does not invent one.
+
+The files in `examples/import_inputs/` are older illustrative inputs. They
+are not importable under the current contract: the reconstruction bundle has
+no `producer_profiles`, so `agep import` rejects it with
+`reconstruction bundle must include producer_profiles`. They are kept
+unchanged as historical examples; use the pinned producer examples above.
 
 Use `agep render --traceable` to render a pack with the traceability addendum:
 

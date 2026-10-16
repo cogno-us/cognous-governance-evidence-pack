@@ -45,6 +45,33 @@ If `--out` is omitted, the rendered markdown is printed to stdout.
 
 ---
 
+## Caller assertions
+
+Fields that describe review, signature, redaction and validation state are
+rendered as the caller supplied them. The renderer does not authenticate
+reviewers, verify signatures, check that content was redacted, or re-run
+validation, so it labels these fields "(asserted, unverified)":
+
+- the Review Status row in the metadata table;
+- the validation summary line in the Executive Summary and the Validation
+  Summary section;
+- the Signed, Redacted and Validation Status columns of the Replay Bundle
+  Inventory;
+- the Redaction and Export Summary table;
+- the Decision column of Review Records.
+
+Semantic validation checks only that these values are internally consistent,
+for example that an `approved` status has a matching review record. A
+rendered "approved" or "Yes" under Signed is a recorded claim, not
+verification. Packs produced by `agep import` start in `draft` with
+`signed` set to false and carry the same labels.
+
+The pre-rendered files in `examples/rendered/` predate the current renderer
+output and are not regenerated automatically. Run `agep render` to see the
+current output.
+
+---
+
 ## Notes
 
 - Pipe characters (`|`) in field values are escaped as `\|` to avoid breaking markdown tables.
