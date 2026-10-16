@@ -25,11 +25,11 @@ Cross-component test commands below now run in a disposable checkout assembled b
 
 A reference format, validator, traceable importer and Markdown renderer for business-facing review of agent governance records. It preserves the relationship between a declared action surface and reconstructed runtime evidence instead of treating a summary as independent assurance.
 
-**Implementation status:** this README describes merged public reference work. Component acceptance, selection in the hub and execution of a qualification are separate facts. The selected revision for this component is `de6b9e071df49fc3e0c1254d39b5c94cced554f0`; the [hub lock](https://github.com/cogno-us/cognous-open-control-stack/blob/5737267d94d2b445735c95e8480a31de73a2abe8/component-lock.json) is the source of that integration choice.
+**Implementation status:** public reference work. The [current component lock](https://github.com/cogno-us/cognous-open-control-stack/blob/main/component-lock.json) defines the selected integration; a component merge does not automatically change that selection or approve deployment.
 
-## Current selection, historical evidence and a bounded example
+## Selection and example
 
-**Current selected hub revision:** `b4baccd823d2a73be276c1de745b19cf7c56a0d6` ([live component lock](https://github.com/cogno-us/cognous-open-control-stack/blob/main/component-lock.json)). **Accepted repository source revision:** `87293cfcbe8dfa2368d5bf77019945ba8ef1ae71`. These are distinct: a newer owning-repository merge or synthetic test is not automatically selected in the hub. The earlier hub checkout `5737267d...` and selected SHA below refer to a **historical evidence generation**, not current selection. Preserve its original counts and limitations. See [hub release status](https://github.com/cogno-us/cognous-open-control-stack/blob/main/docs/release-status.md) and [Start here](https://github.com/cogno-us/cognous-open-control-stack/blob/main/docs/start-here.md).
+Use the [current component lock](https://github.com/cogno-us/cognous-open-control-stack/blob/main/component-lock.json) for integration selection and the [central test hub](https://github.com/cogno-us/cognous-stack-qualification/blob/main/results/readme-commentary/index.md) for revision-specific qualification commentary. Source acceptance, selection and deployment approval remain separate decisions.
 
 **Synthetic example:** A synthetic evidence pack links the refund proposal, authorization decision, runtime attempt and observed unknown outcome. Its summary is derivative evidence, not independent confirmation that a processor settled the refund.
 
@@ -68,11 +68,11 @@ agep summarize examples/customer_service_agent_evidence_pack.json
 agep check-examples
 ```
 
-## Evidence and supported scope
+## Scope and compatibility
 
-The hub selects `de6b9e071df49fc3e0c1254d39b5c94cced554f0`. Current persistence-generation transformation is **0.3.1**; previous selected producer-2.0.0 transformation **0.3.0** and historical **0.2.6** remain separately tested. Imported pack schema remains **0.2.0**. See the [persistence checkpoint](docs/workstreams/evidence-pack-control-plane-store-checkpoint.md); older migration notes describe their original generation.
+Use the [current component lock](https://github.com/cogno-us/cognous-open-control-stack/blob/main/component-lock.json) for the selected revision. Current persistence-generation transformation is **0.3.1**; previous selected producer-2.0.0 transformation **0.3.0** and historical **0.2.6** remain distinct compatibility mappings. Imported pack schema remains **0.2.0**. See the [persistence checkpoint](docs/workstreams/evidence-pack-control-plane-store-checkpoint.md); older migration notes describe their original generation.
 
-The accepted [hub persistence-generation evidence](https://github.com/cogno-us/cognous-open-control-stack/blob/5737267d94d2b445735c95e8480a31de73a2abe8/examples/control-plane-store-adoption/qualification-summary.json) records 915 Python tests in each of two repetitions, 35 matrix entries satisfying their gates and 120 separate mocked OpenShell tests. Those are aggregate hub results, not a per-component test count or a claim of production readiness. Optional behavioral layers receive static checks only. The [support ledger](https://github.com/cogno-us/cognous-open-control-stack/blob/main/docs/release-status.md) separates implementation, execution and adoption.
+Test results, run commentary and historical qualification records are maintained in the [central test hub](https://github.com/cogno-us/cognous-stack-qualification/blob/main/results/readme-commentary/index.md). Read them against their recorded source revisions; source selection and deployment approval are separate decisions.
 
 ## Limitations and deployment decisions
 
@@ -148,3 +148,7 @@ The exact merged Control Plane/executor pair has a versioned `agep-manifest-reco
 ## Cross component qualification
 
 Executable integration suites and harnesses moved to the [qualification repository](https://github.com/cogno-us/cognous-stack-qualification/tree/39f038435afdd71ba162860faa5718d90d7bde64/suites/cognous-governance-evidence-pack). See [the path migration map](CROSS_COMPONENT_TESTS.md) for current commands and source identity rules. Component-local tests remain here; historical qualification results retain their original scope.
+
+<!-- Retained anchors for existing documentation links. -->
+<a id="current-selection-historical-evidence-and-a-bounded-example"></a>
+<a id="evidence-and-supported-scope"></a>
