@@ -11,7 +11,7 @@ The importer is deterministic and review-support oriented. It converts supplied 
 | Agent Action Manifest | `46c950bed37fe3812000895430bc0312d29e37ce`, Manifest v1.1 |
 | Agent Replay Bundle | `f63ce914504dd06813c4ccd199b0570dbd8dd427`, Reconstruction Bundle 0.2.0 |
 | Agent Control Plane | `283500652d47a692fb0b99a1172a6d5faffbd9a7` |
-| Moltbot Safe | `1d308faf664c504b6e310db3c7a310153ef7b067` (executor producer profile 1.0.0), Execution Envelope 0.2.0 |
+| Execution Runtime | `1d308faf664c504b6e310db3c7a310153ef7b067` (executor producer profile 1.0.0), Execution Envelope 0.2.0 |
 | Alvorada | `fb3d97938969a89e149e8ff8db2756091d1233fc`, Authority Context 0.1.0 |
 
 The import path currently consumes a Manifest artifact and a Reconstruction Bundle artifact. It does not fetch arbitrary external references. It treats source text as data.
@@ -133,7 +133,7 @@ Accepted producer pins used by the traceable importer and integration checks:
 
 - Manifest v1.1: `46c950bed37fe3812000895430bc0312d29e37ce`
 - Control Plane: `283500652d47a692fb0b99a1172a6d5faffbd9a7`
-- Moltbot Safe: `1d308faf664c504b6e310db3c7a310153ef7b067` (executor producer profile 1.0.0)
+- Execution Runtime: `1d308faf664c504b6e310db3c7a310153ef7b067` (executor producer profile 1.0.0)
 - Reconstruction Bundle 0.2.0 / Replay: `f63ce914504dd06813c4ccd199b0570dbd8dd427`
 - ODES: `cba83a1c06f718a8afd76178f36e5cc15896347d`
 - accepted GAX/IMX retained-artifact reference: `6bcde026a804c7377f5e39f57ca6dd00b3c3292d`
@@ -178,7 +178,7 @@ upgraded in place.
 
 The versioned executor path is validated against:
 
-- Moltbot Safe `1d308faf664c504b6e310db3c7a310153ef7b067`
+- Execution Runtime `1d308faf664c504b6e310db3c7a310153ef7b067`
 - executor producer profile
   `urn:cognous:profiles:moltbot-safe-executor-producer` / `1.0.0`
 - Execution Envelope `0.2.0`
