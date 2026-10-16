@@ -104,7 +104,7 @@
     {
       "bundle_id": "0d8e8d51-4bb3-4a49-a46c-d738d42429e7",
       "run_id": "run-1",
-      "status": "reconstruction_complete",
+      "status": "validated_complete",
       "generated_at": "2026-10-06T23:33:40.679718+00:00",
       "signed": false,
       "redacted": false,
@@ -117,7 +117,7 @@
     "invalid_bundle_count": 0,
     "warning_count": 1,
     "error_count": 0,
-    "summary": "Source artifacts passed supported semantic import checks. This does not establish deployment approval, compliance, operational effectiveness, or independent audit."
+    "summary": "Source artifacts were evaluated by supported semantic import checks; inspect the actual findings. This does not establish deployment approval, compliance, operational effectiveness, or independent audit."
   },
   "redaction_exports": [],
   "risk_register": [],
@@ -974,7 +974,7 @@
       },
       "redaction_state": {
         "redacted": false,
-        "source": "unknown_schema_default_false",
+        "source": "unverified_source_claim",
         "derivation": null
       },
       "import_findings": [
@@ -1001,10 +1001,9 @@
           "message": "Replay reconstructs recorded events only; import never renews permission or creates an effect."
         },
         {
-          "code": "R_REDACTION_STATE_UNKNOWN",
+          "code": "R_REDACTION_UNVERIFIED",
           "severity": "warning",
-          "path": "reconstruction_bundle.derivation|metadata.redaction",
-          "message": "Source did not declare redaction state; EvidencePack boolean defaults to false for schema compatibility."
+          "message": "Source declarations do not verify removal of sensitive content; export safety is unverified."
         }
       ],
       "manual_assessments": [],
