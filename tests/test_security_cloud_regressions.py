@@ -44,3 +44,17 @@ def test_large_metadata_rejected_before_loading():
 
 def test_control_characters_do_not_reach_rendered_output():
     assert '\x1b' not in _escape('name\x1b[31m')
+
+
+def test_import_files_reject_duplicate_json_keys(tmp_path):
+    from agent_governance_evidence_pack.importer import build_evidence_pack_from_files
+    manifest = tmp_path / 'manifest.json'
+    bundle = tmp_path / 'bundle.json'
+    manifest.write_text('{"manifest_version": "1.1", "manifest_id": "m", "manifest_id": "substituted"}', encoding='utf-8')
+    bundle.write_text('{"bundle_version": "0.2.0"}', encoding='utf-8')
+    with pytest.raises(ValueError, match='duplicate JSON key'):
+        build_evidence_pack_from_files(manifest, bundle)
+    manifest.write_text('{"manifest_version": "1.1"}', encoding='utf-8')
+    bundle.write_text('{"bundle_version": "0.2.0", "status": "a", "status": "b"}', encoding='utf-8')
+    with pytest.raises(ValueError, match='duplicate JSON key'):
+        build_evidence_pack_from_files(manifest, bundle)

@@ -1214,8 +1214,7 @@ def build_evidence_pack_from_artifacts(manifest: dict[str, Any], reconstruction_
 
 
 def build_evidence_pack_from_files(manifest_path: str | Path, reconstruction_path: str | Path, *, title: str | None = None, generated_at: str | None = None) -> EvidencePack:
-    with Path(manifest_path).open("r", encoding="utf-8") as handle:
-        manifest = json.load(handle)
-    with Path(reconstruction_path).open("r", encoding="utf-8") as handle:
-        reconstruction_bundle = json.load(handle)
+    from .admission import loads, read_bytes
+    manifest = loads(read_bytes(manifest_path))
+    reconstruction_bundle = loads(read_bytes(reconstruction_path))
     return build_evidence_pack_from_artifacts(manifest, reconstruction_bundle, title=title, generated_at=generated_at)

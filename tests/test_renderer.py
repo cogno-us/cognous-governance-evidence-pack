@@ -242,3 +242,36 @@ class TestContentRendering:
             in result
         )
         assert "Requires monthly audit review." in result
+
+
+class TestCallerAssertionLabels:
+    """Hand-authored review/signature/redaction/validation fields are caller assertions."""
+
+    def test_signed_and_approved_rendered_as_unverified_assertions(self):
+        bundles = [
+            ReplayBundleInventoryItem(
+                bundle_id="b-1",
+                run_id="run-1",
+                signed=True,
+                redacted=True,
+                validation_status="valid",
+            )
+        ]
+        records = [
+            ReviewRecord(
+                reviewer="Alice",
+                reviewed_at="2026-01-02T00:00:00Z",
+                decision=ReviewStatus.approved,
+            )
+        ]
+        pack = _minimal_pack(
+            review_status=ReviewStatus.approved,
+            review_records=records,
+            replay_bundles=bundles,
+        )
+        result = render_markdown(pack)
+        assert "| Review Status (asserted, unverified) | approved |" in result
+        assert "| Signed (asserted, unverified) | Redacted (asserted, unverified) | Validation Status (asserted, unverified) |" in result
+        assert "| Decision (asserted, unverified) |" in result
+        assert "| Signed |" not in result
+        assert "not verified by this renderer" in result

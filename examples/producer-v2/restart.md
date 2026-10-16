@@ -5,7 +5,7 @@
 | Pack ID | agep-ddb533159e242ac6 |
 | Version | 0.2.0 |
 | Generated At | 2026-10-06T23:33:40.586195+00:00 |
-| Review Status | draft |
+| Review Status (asserted, unverified) | draft |
 | Agent | Synthetic Refund Agent |
 | Environment | other |
 | Owner | cognous-integration-pilot |
@@ -17,7 +17,7 @@
 
 The pack records **1** tool(s), **2** action(s), **2** privileged/review-sensitive action(s), and **1** replay/reconstruction bundle reference(s).
 
-Validation summary: 1 valid bundle(s), 0 invalid bundle(s), 0 error(s), 1 warning(s).
+Validation summary (asserted, unverified): 1 valid bundle(s), 0 invalid bundle(s), 0 error(s), 1 warning(s).
 Source artifacts were evaluated by supported semantic import checks; inspect the actual findings. This does not establish deployment approval, compliance, operational effectiveness, or independent audit.
 
 No open risks recorded. Absence of incident records does not prove absence of incidents.
@@ -103,11 +103,15 @@ No reliance records recorded.
 
 ## 10. Replay Bundle Inventory
 
-| Bundle ID | Run ID | Status | Generated At | Signed | Redacted | Validation Status | Evidence Reference |
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
+
+| Bundle ID | Run ID | Status | Generated At | Signed (asserted, unverified) | Redacted (asserted, unverified) | Validation Status (asserted, unverified) | Evidence Reference |
 |---|---|---|---|---|---|---|---|
 | 08253326-2e03-438c-815b-7e0fbd485ed6 | run-1 | validated_complete | 2026-10-06T23:33:40.586195+00:00 | No | No | semantically_valid | metadata.traceable_import.source_record_refs |
 
 ## 11. Validation Summary
+
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
 
 **Valid Bundles:** 1 | **Invalid Bundles:** 0 | **Errors:** 0 | **Warnings:** 1
 
