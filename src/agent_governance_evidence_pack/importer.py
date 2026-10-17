@@ -78,7 +78,7 @@ SECURITY_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.5-sec
 # F5b merged-source generation, added beside (not replacing) the security generation above.
 # Each generation is an exact set: no revision from one may pair with another's.
 F5B_REVISIONS = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
-    "replay": "0cfe7a6319930bccad3e9027a1dfbe3d6e29d657",
+    "replay": "def0ee0f3af713283ea3cd13f0caf79e1607b651",
     "control_plane": "a34c3dc26f84a767a55f9d5c89dc0b53e63fefa5",
     "moltbot_safe": "4a83b175d2ef0e65a7ee22a0513bb94a5fdf3a6f"}
 F5B_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.6-security-runtime-f5b-candidate"
