@@ -4,10 +4,11 @@ Replay retains a destination recovery report as record type ``executor_recovery_
 extensions as ``executor_export_extensions``. The pack rebuilds the executor export from the retained records and
 re-runs Replay's importer, so those records must map back to the export layout their ``source_path`` names.
 
-These tests use the real ``agent_replay_bundle`` (Replay main 8702b8a7 or later, which retains these record types)
-and the three route-B fixtures copied from Replay's ``tests/fixtures/route_b_post_commit``. They are skipped when the
-importable Replay does not retain recovery reports (for example the older pinned revision), so the default CI job
-without a Replay install is unaffected.
+These tests use the real ``agent_replay_bundle`` (Replay step B, 9aab3f6c or later: the P4 generation and the final
+export layout) and the four route-B fixtures copied from Replay's ``tests/fixtures/route_b_post_commit`` (re-captured from
+runtime 3024ef6e: three recovery variants and a normal executed export, F-28). They are skipped when the importable Replay
+predates the P4 generation, so a job without a recent Replay install is unaffected; the qualification pack workflow
+installs Replay at the pinned step-B revision for them.
 """
 from __future__ import annotations
 
@@ -23,9 +24,10 @@ replay = pytest.importorskip("agent_replay_bundle.importers")
 
 BASE = Path(__file__).parent / "fixtures" / "route_b_post_commit"
 VARIANTS = ("observe_bound_fail", "lost_ack_recon_down", "reconcile_only")
+ALL_VARIANTS = (*VARIANTS, "executed")
 
-if not hasattr(replay, "CONTROL_PLANE_F5B_REVISION"):
-    pytest.skip("installed Replay predates the F5b generation", allow_module_level=True)
+if not hasattr(replay, "CONTROL_PLANE_P4_REVISION"):
+    pytest.skip("installed Replay predates the P4 generation", allow_module_level=True)
 
 
 def load(variant):
@@ -36,7 +38,7 @@ def load(variant):
 def bundle_of(cp, proposal, executor):
     reconstructed = replay.import_bounded_workflow(
         cp, proposal=proposal, moltbot_export=executor,
-        control_plane_revision=replay.CONTROL_PLANE_F5B_REVISION)
+        control_plane_revision=replay.CONTROL_PLANE_P4_REVISION)
     return reconstructed.model_dump(mode="json")
 
 
@@ -47,13 +49,13 @@ def retains_recovery_reports():
         pytest.skip("installed Replay does not retain executor_recovery_report records")
 
 
-@pytest.mark.parametrize("variant", VARIANTS)
+@pytest.mark.parametrize("variant", ALL_VARIANTS)
 def test_route_b_bundle_revalidates(variant, retains_recovery_reports):
     bundle = bundle_of(*load(variant))
     assert imp._run_pinned_replay_validator(bundle) == "validated_complete"
 
 
-@pytest.mark.parametrize("variant", VARIANTS)
+@pytest.mark.parametrize("variant", ALL_VARIANTS)
 def test_rebuilt_export_equals_original_executor_export(variant, retains_recovery_reports):
     cp, proposal, executor = load(variant)
     bundle = bundle_of(cp, proposal, executor)
@@ -61,7 +63,8 @@ def test_rebuilt_export_equals_original_executor_export(variant, retains_recover
     for member in ("execution_result", "observations", "attempts", "attempt_events", "effects",
                    "rejected_observations", "control_plane_evidence"):
         assert rebuilt[member] == executor[member], member
-    assert "recovery_observations" not in rebuilt  # legacy layout: mirrored in observations
+    # final layout: observations lists validated observations only; a report is in recovery_observations
+    assert rebuilt.get("recovery_observations") == executor.get("recovery_observations")
     assert "extensions" not in rebuilt
 
 
@@ -69,6 +72,7 @@ def _new_layout(executor, *, mirror):
     executor = copy.deepcopy(executor)
     report = executor["execution_result"]["observation"]
     executor["observations"] = []
+    executor.pop("recovery_observations", None)
     if mirror:
         executor["recovery_observations"] = [copy.deepcopy(report)]
     return executor

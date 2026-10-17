@@ -12,7 +12,7 @@ from agent_governance_evidence_pack.importer import ImportContractError
 from tests.test_f5b_generation import F5B, MANIFEST, OLD, RUNTIME_AUTHORITY_EXECUTOR, _bundle, _replay_constants, replay  # noqa: F401
 
 P4 = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
-      "replay": "7c6888fb0bf3218b3e315bc22714c4406f6d3908",
+      "replay": "9aab3f6c34d2721ef1be3f6468b71dc3bad99a2a",
       "control_plane": "26a7e6594eb535827ccc248cbca36a7d119d613b",
       "moltbot_safe": "3024ef6e6ecf7da22e5f4fdf90d873f93b2a55c9"}
 

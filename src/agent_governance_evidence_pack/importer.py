@@ -87,7 +87,7 @@ F5B_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.6-security
 # with the Replay revision below, the producers after the execution-attempt lifecycle contract work. Added beside F5b
 # (retained F5b evidence stays accepted). Alpha scaffolding: removed with the other hard pins at end-of-alpha (P5).
 P4_REVISIONS = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
-    "replay": "7c6888fb0bf3218b3e315bc22714c4406f6d3908",
+    "replay": "9aab3f6c34d2721ef1be3f6468b71dc3bad99a2a",
     "control_plane": "26a7e6594eb535827ccc248cbca36a7d119d613b",
     "moltbot_safe": "3024ef6e6ecf7da22e5f4fdf90d873f93b2a55c9"}
 P4_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.7-security-runtime-p4-candidate"
