@@ -237,3 +237,8 @@ Existing ODES and GAX integrations exercise their own previously accepted pins.
 They do not validate this repaired-Control-Plane combination. Qualification of a
 future ODES/GAX path against this combination is pending those components'
 separately accepted compatibility updates.
+
+
+## Retained Replay bundle comparison
+
+For producer-v2 bundles the importer re-runs the pinned Replay import over the retained records and requires the retained bundle to equal the fresh reconstruction in `records`, `links`, `commitments`, `producer_profiles`, `status`, `import_reports` and `semantics` (and the effect observation history and executor producer contract metadata). Import reports carry the unknown, unavailable and absent states, and `semantics` carry the non-promotion statements (no independent effect verification, producer-reported destination observation); neither can be dropped or altered without the import being refused. Other bundle fields (for example `bundle_id`, `generated_at`, `integrity`, remaining `metadata`) are not compared. Legacy (non-v2) bundles are not compared field by field.

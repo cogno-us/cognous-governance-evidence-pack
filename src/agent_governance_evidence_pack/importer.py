@@ -639,7 +639,7 @@ def _run_pinned_replay_validator(bundle: dict[str, Any]) -> str:
             reconstructed = import_bounded_workflow(control_plane, proposal=proposal,
                 moltbot_export=moltbot, control_plane_revision=revision)
             validated = reconstructed.model_dump(mode="json")
-            for field in ("records", "links", "commitments", "producer_profiles", "status"):
+            for field in ("records", "links", "commitments", "producer_profiles", "status", "import_reports", "semantics"):
                 if bundle.get(field) != validated.get(field):
                     raise ImportContractError(f"retained Replay {field} differs from accepted reconstruction")
             for field in ("effect_observation_history", "moltbot_producer_contract"):
