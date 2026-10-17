@@ -17,14 +17,14 @@ OLD = {"manifest": "e385f8c19b4444817a8b84b72ed6edbc37deb807",
        "control_plane": "996baeb476c8745b1a58ddc968b9eecc6a39b76b",
        "moltbot_safe": "fd6b76fa0e85feb5b67324114bf790d3a12fdaf1"}
 F5B = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
-       "replay": "0cfe7a6319930bccad3e9027a1dfbe3d6e29d657",
+       "replay": "def0ee0f3af713283ea3cd13f0caf79e1607b651",
        "control_plane": "a34c3dc26f84a767a55f9d5c89dc0b53e63fefa5",
        "moltbot_safe": "4a83b175d2ef0e65a7ee22a0513bb94a5fdf3a6f"}
 RUNTIME_AUTHORITY_EXECUTOR = "a9a4f75a9a880ba0ae2c3b5a01fcee0ae904e127"
 
 
 def _replay_constants(**overrides):
-    """Constants Replay 0cfe7a63 exports, as the Evidence Pack mapping check reads them."""
+    """Constants Replay def0ee0f exports, as the Evidence Pack mapping check reads them."""
     values = dict(
         BOUNDED_V2_PROFILE="control-plane-bounded-v2", CONTROL_PLANE_V2_REVISION=imp.V2_REVISIONS["control_plane"],
         BOUNDED_V2_PERSISTENCE_PROFILE="control-plane-bounded-v2-persistence",
