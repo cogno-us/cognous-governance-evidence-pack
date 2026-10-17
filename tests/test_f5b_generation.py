@@ -17,14 +17,14 @@ OLD = {"manifest": "e385f8c19b4444817a8b84b72ed6edbc37deb807",
        "control_plane": "996baeb476c8745b1a58ddc968b9eecc6a39b76b",
        "moltbot_safe": "fd6b76fa0e85feb5b67324114bf790d3a12fdaf1"}
 F5B = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
-       "replay": "79ba16d48b9be1e059b3045989c7df960c3df1c2",
+       "replay": "0cfe7a6319930bccad3e9027a1dfbe3d6e29d657",
        "control_plane": "a34c3dc26f84a767a55f9d5c89dc0b53e63fefa5",
-       "moltbot_safe": "e20f92e104aba2ba6ad06120d8549c6170eaf63f"}
+       "moltbot_safe": "4a83b175d2ef0e65a7ee22a0513bb94a5fdf3a6f"}
 RUNTIME_AUTHORITY_EXECUTOR = "a9a4f75a9a880ba0ae2c3b5a01fcee0ae904e127"
 
 
 def _replay_constants(**overrides):
-    """Constants Replay 79ba16d4 exports, as the Evidence Pack mapping check reads them."""
+    """Constants Replay 0cfe7a63 exports, as the Evidence Pack mapping check reads them."""
     values = dict(
         BOUNDED_V2_PROFILE="control-plane-bounded-v2", CONTROL_PLANE_V2_REVISION=imp.V2_REVISIONS["control_plane"],
         BOUNDED_V2_PERSISTENCE_PROFILE="control-plane-bounded-v2-persistence",
@@ -103,7 +103,7 @@ def test_each_generation_selects_only_its_own_revisions(replay, generation):
     (imp.RUNTIME_AUTHORITY_REVISIONS["control_plane"], F5B["moltbot_safe"], None),
     (F5B["control_plane"], F5B["moltbot_safe"], OLD["manifest"]),
     (OLD["control_plane"], OLD["moltbot_safe"], F5B["manifest"]),
-], ids=["cp996baeb4+exe20f92e1", "cpa34c3dc2+exfd6b76fa", "cpa34c3dc2+exa9a4f75a", "cp2a17b2ba+exe20f92e1",
+], ids=["cp996baeb4+ex4a83b175", "cpa34c3dc2+exfd6b76fa", "cpa34c3dc2+exa9a4f75a", "cp2a17b2ba+ex4a83b175",
         "f5b+manifest-e385f8c1", "security+manifest-2c36bcd0"])
 def test_cross_generation_pairs_rejected(replay, cp, executor, manifest_revision):
     with pytest.raises(ImportContractError, match="not paired"):

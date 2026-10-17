@@ -1,6 +1,6 @@
 # F5b repaired runtime Evidence Pack generation — 16 October 2026
 
-Adds transformation `agep-manifest-reconstruction-import/0.3.6-security-runtime-f5b-candidate` for the exact CP a34c3dc2 / runtime e20f92e1 / Replay 79ba16d4 / Manifest 2c36bcd0 generation. These are the merged revisions after the F5b security repairs. Replay 79ba16d4 exports them as `CONTROL_PLANE_F5B_REVISION`, `MOLTBOT_F5B_REVISION`, `MANIFEST_F5B_REVISION` and `BOUNDED_F5B_PROFILE`.
+Adds transformation `agep-manifest-reconstruction-import/0.3.6-security-runtime-f5b-candidate` for the exact CP a34c3dc2 / runtime 4a83b175 / Replay 0cfe7a63 / Manifest 2c36bcd0 generation. These are the merged revisions after the F5b security repairs. Replay 0cfe7a63 exports them as `CONTROL_PLANE_F5B_REVISION`, `MOLTBOT_F5B_REVISION`, `MANIFEST_F5B_REVISION` and `BOUNDED_F5B_PROFILE`.
 
 The change follows the same additive pattern as the [repaired runtime generation](security-runtime-profile-20261016.md). It does not change the CP 996baeb4 / runtime fd6b76fa / Replay 3601fb21 / Manifest e385f8c1 generation, its `0.3.5-security-runtime-candidate` transformation, or any other historical mapping, so retained evidence from those generations still imports. Importing that earlier generation does not require the F5b Replay constants.
 
