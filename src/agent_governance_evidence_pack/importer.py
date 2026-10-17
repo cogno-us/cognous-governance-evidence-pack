@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections import Counter, defaultdict
 from copy import deepcopy
 from pathlib import Path
@@ -216,7 +217,7 @@ REQUIRED_REPOS = {
     "cogno-us/moltbot-safe": {LEGACY_MOLTBOT_SAFE_REVISION, MOLTBOT_SAFE_REVISION, V2_REVISIONS["moltbot_safe"], MERGED_REVISIONS["moltbot_safe"], REFUSAL_REVISIONS["moltbot_safe"], RUNTIME_AUTHORITY_REVISIONS["moltbot_safe"], SECURITY_REVISIONS["moltbot_safe"], F5B_REVISIONS["moltbot_safe"]},
     "cogno-us/constitutional-governance-for-institutions": {ALVORADA_REVISION},
 }
-EXECUTION_TYPES = {"execution_envelope", "execution_result", "destination_attempt", "destination_attempt_event", "destination_effect", "executor_observation", "moltbot_attributed_control_plane_attempt"}
+EXECUTION_TYPES = {"execution_envelope", "execution_result", "destination_attempt", "destination_attempt_event", "destination_effect", "executor_observation", "executor_recovery_report", "executor_export_extensions", "moltbot_attributed_control_plane_attempt"}
 
 
 class ImportContractError(ValueError):
@@ -488,6 +489,70 @@ def _retained_by_type(bundle: dict[str, Any]) -> dict[str, list[dict[str, Any]]]
     return by_type
 
 
+_OBSERVATION_PATH = re.compile(r"^moltbot\.(observations|recovery_observations)\[(\d+)\]$")
+_RESULT_OBSERVATION_PATH = "moltbot.execution_result.observation"
+_EXTENSIONS_PATH = "moltbot.extensions"
+
+
+def _retained_recovery_and_extensions(bundle: dict[str, Any]) -> dict[str, Any]:
+    """Map retained route-B recovery reports and export-level extensions back into the executor export.
+
+    Replay retains a destination recovery report as record type ``executor_recovery_report`` and export-level
+    extensions as ``executor_export_extensions``. The record's ``source_path`` says where the original export
+    carried it, and the rebuilt export preserves that layout: ``moltbot.observations[i]`` (legacy mirror, kept at
+    its original index among validated observations), ``moltbot.recovery_observations[i]`` (new layout), or
+    ``moltbot.execution_result.observation`` (carried by the result only, so nothing is added). Anything else is
+    rejected rather than guessed. Returns only members that need to override or extend the plain export.
+    """
+    out: dict[str, Any] = {}
+    records = sorted(_records(bundle), key=lambda item: item.get("source_sequence", 0))
+    legacy: dict[int, dict[str, Any]] = {}
+    recovery: dict[int, dict[str, Any]] = {}
+    extensions: list[dict[str, Any]] = []
+    for record in records:
+        kind = _record_type(record)
+        if kind == "executor_recovery_report":
+            path = record.get("source_path")
+            if path == _RESULT_OBSERVATION_PATH:
+                continue
+            match = _OBSERVATION_PATH.match(path) if isinstance(path, str) else None
+            if match is None:
+                raise ImportContractError(f"retained executor_recovery_report has unsupported source_path {path!r}")
+            target = legacy if match.group(1) == "observations" else recovery
+            index = int(match.group(2))
+            if index in target:
+                raise ImportContractError(f"duplicate retained executor_recovery_report at {path}")
+            target[index] = deepcopy(_data(record))
+        elif kind == "executor_export_extensions":
+            if record.get("source_path") != _EXTENSIONS_PATH:
+                raise ImportContractError(f"retained executor_export_extensions has unsupported source_path {record.get('source_path')!r}")
+            extensions.append(deepcopy(_data(record)))
+    if len(extensions) > 1:
+        raise ImportContractError("execution evidence permits at most one retained executor_export_extensions record")
+    if extensions:
+        out["extensions"] = extensions[0]
+    if recovery:
+        if sorted(recovery) != list(range(len(recovery))):
+            raise ImportContractError("retained recovery_observations indexes are not contiguous")
+        out["recovery_observations"] = [recovery[i] for i in sorted(recovery)]
+    if legacy:
+        validated: dict[int, dict[str, Any]] = {}
+        for record in records:
+            if _record_type(record) != "executor_observation":
+                continue
+            path = record.get("source_path")
+            match = _OBSERVATION_PATH.match(path) if isinstance(path, str) else None
+            if match is None or match.group(1) != "observations":
+                raise ImportContractError(f"retained executor_observation has unsupported source_path {path!r}")
+            validated[int(match.group(2))] = deepcopy(_data(record))
+        overlap = set(validated) & set(legacy)
+        merged = {**validated, **legacy}
+        if overlap or sorted(merged) != list(range(len(merged))):
+            raise ImportContractError("retained legacy observations indexes are inconsistent")
+        out["observations"] = [merged[i] for i in sorted(merged)]
+    return out
+
+
 def _retained_replay_inputs(bundle: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any] | None, dict[str, Any] | None]:
     by_type = _retained_by_type(bundle)
     if len(by_type.get("runtime_proposal", [])) > 1:
@@ -526,6 +591,7 @@ def _retained_replay_inputs(bundle: dict[str, Any]) -> tuple[dict[str, Any], dic
             "effects": by_type.get("destination_effect", []),
             "observations": by_type.get("executor_observation", []),
         }
+        moltbot.update(_retained_recovery_and_extensions(bundle))
         contract = (bundle.get("metadata") or {}).get("moltbot_producer_contract")
         if isinstance(contract, dict) and not contract.get("legacy"):
             if contract.get("interface_profile_id") != MOLTBOT_PRODUCER_PROFILE_ID:
