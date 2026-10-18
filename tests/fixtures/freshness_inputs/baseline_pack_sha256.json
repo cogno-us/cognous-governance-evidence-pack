@@ -1,0 +1,10 @@
+{
+ "computed_on": "cogno-us/cognous-governance-evidence-pack 76f5280a (before the freshness block), _semantic stubbed, generated_at=2026-10-18T00:00:00+00:00, manifest as in tests/test_freshness_block.py",
+ "pack_json_sha256": {
+  "executed": "590c07ba9dc856d708cae36e6be3612225620ab0bdd913a7747f636e2ff83391",
+  "legacy_journal_no_freshness_members": "9c63e89430d7b1f79998fb3e7dbb5dc1fd7953d955bfade29a4a8c4f0b41f8d7",
+  "lost_ack_recon_down": "259d4a47d0075536d20fff6b1bb97b5f239ab06cddca636fd5612e145c0c1be6",
+  "observe_bound_fail": "bf8c1611ba423bab163300ae6aa001ebc2820dbef47f1b5f12b1d2051d5fd632",
+  "reconcile_only": "99162e6dbcef8d6258cd315b9c9c909d1ae02e9b1ce1af04630b6897b21634dc"
+ }
+}

@@ -1279,6 +1279,16 @@ def _redaction_status(bundle: dict[str, Any], findings: list[dict[str, Any]]) ->
     return False, "unverified_source_claim"
 
 
+def _freshness_as_of(generated: Any) -> str | None:
+    """The source generation time as the freshness block's as_of, or None when it is not a parseable timestamp."""
+    from .freshness import parse_time
+    try:
+        parse_time(str(generated))
+    except ValueError:
+        return None
+    return str(generated)
+
+
 def import_manifest_reconstruction(manifest: dict[str, Any], reconstruction_bundle: dict[str, Any], *, title: str | None = None, generated_at: str | None = None) -> EvidencePack:
     from .admission import admit_value
     manifest = deepcopy(admit_value(_obj(manifest, "manifest"))); bundle = deepcopy(admit_value(_obj(reconstruction_bundle, "reconstruction_bundle")))
@@ -1334,6 +1344,14 @@ def import_manifest_reconstruction(manifest: dict[str, Any], reconstruction_bund
                           for (v,c),n in sorted(counts.items())],
                 "prior_window":"unavailable", "disappearance_assessed":False,
                 "limitation":"source-record counts; exposure and collection completeness not independently established"}
+    # Opt-in freshness block: present only when the retained run record carries freshness members (see freshness.py).
+    from .freshness import block_for_records
+    try:
+        freshness = block_for_records(bundle["records"], as_of=None if generated == "unavailable" else _freshness_as_of(generated))
+    except (KeyError, TypeError, ValueError, AttributeError) as exc:
+        raise ImportContractError(f"retained freshness members are malformed: {exc!r}") from exc
+    if freshness is not None:
+        pack.metadata["traceable_import"]["freshness_summary"] = freshness
     # Every traceable transformation must retain the exact inputs needed for revalidation.
     pack.metadata["traceable_import"]["retained_sources"] = {"manifest": manifest, "reconstruction_bundle": bundle}
     return pack
