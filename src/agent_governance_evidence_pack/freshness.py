@@ -41,7 +41,9 @@ NOT_PROVEN = (
 
 def parse_time(value: str) -> datetime:
     dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+    if dt.tzinfo is None:
+        raise ValueError(f"timestamp {value!r} carries no UTC offset")
+    return dt.astimezone(timezone.utc)
 
 
 def iso(value: datetime) -> str:

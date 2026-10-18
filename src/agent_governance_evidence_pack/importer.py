@@ -782,13 +782,103 @@ def _installed_replay_revision() -> str | None:
         return None
 
 
+def _imported_replay_code_problem() -> str | None:
+    """Why the imported ``agent_replay_bundle`` code is not the code of the installed distribution, or None.
+
+    A distribution that records a VCS commit must list the imported package files in its RECORD; every Python or extension file
+    in the package directory (and every loaded submodule) must be listed, and a recorded digest must match the file. An editable
+    or local-directory install must be imported from the directory its metadata names. Code imported from a git checkout without
+    such metadata is judged by ``_installed_replay_revision`` itself (it reads the imported location). Nothing importable: nothing
+    to attest here (the validator import fails on its own).
+    """
+    import base64
+    import hashlib
+    import importlib.metadata as metadata
+    import importlib.util
+    import sys
+    from pathlib import Path as _Path
+    from urllib.parse import unquote, urlparse
+    module = sys.modules.get("agent_replay_bundle")
+    try:
+        if module is not None:
+            origin = getattr(module, "__file__", None)
+        else:
+            spec = importlib.util.find_spec("agent_replay_bundle")
+            if spec is None:
+                return None
+            origin = spec.origin
+    except Exception as exc:
+        return f"the location of the imported code cannot be established ({exc.__class__.__name__})"
+    if not origin:
+        return "the location of the imported code cannot be established"
+    origin_path = _Path(origin).resolve()
+    package_dir = origin_path.parent
+    try:
+        distribution = metadata.distribution("agent-replay-bundle")
+        raw = distribution.read_text("direct_url.json")
+        info = json.loads(raw) if raw else {}
+    except metadata.PackageNotFoundError:
+        return None
+    except Exception as exc:
+        return f"distribution metadata is unreadable ({exc.__class__.__name__})"
+    if isinstance((info.get("vcs_info") or {}).get("commit_id"), str):
+        recorded: dict[_Path, str | None] = {}
+        for entry in distribution.files or []:
+            digest = entry.hash
+            recorded[_Path(distribution.locate_file(entry)).resolve()] = f"{digest.mode}={digest.value}" if digest else None
+
+        def verify(path: _Path) -> str | None:
+            if path not in recorded:
+                return f"{path.name} is not a file of the installed distribution"
+            want = recorded[path]
+            if want:
+                mode, _, value = want.partition("=")
+                if mode != "sha256":
+                    return f"{path.name} has an unsupported recorded digest"
+                got = base64.urlsafe_b64encode(hashlib.sha256(path.read_bytes()).digest()).rstrip(b"=").decode()
+                if got != value:
+                    return f"{path.name} differs from its recorded digest"
+            return None
+
+        try:
+            files = {origin_path} | {p.resolve() for p in package_dir.rglob("*")
+                                     if p.suffix in {".py", ".so", ".pyd"} and "__pycache__" not in p.parts}
+            for name, loaded in list(sys.modules.items()):
+                if name.startswith("agent_replay_bundle.") and getattr(loaded, "__file__", None):
+                    files.add(_Path(loaded.__file__).resolve())
+            if module is not None:
+                for entry in getattr(module, "__path__", []):
+                    if _Path(entry).resolve() != package_dir:
+                        return "the imported package searches a directory outside the installed distribution"
+            for path in sorted(files):
+                problem = verify(path)
+                if problem:
+                    return problem
+        except OSError as exc:
+            return f"the imported code cannot be read ({exc.__class__.__name__})"
+        return None
+    url = urlparse(str(info.get("url", "")))
+    if "dir_info" in info and url.scheme == "file":
+        root = _Path(unquote(url.path)).resolve()
+        if root != origin_path and root not in origin_path.parents:
+            return "the imported code is outside the directory named by the distribution metadata"
+    return None
+
+
 def _require_pinned_replay_distribution(expected: str) -> None:
-    """Refuse to emit a trusted-revision claim unless the installed Replay distribution is the pinned revision."""
+    """Refuse to emit a trusted-revision claim unless the imported Replay code is the pinned revision.
+
+    The revision is read from the installed distribution (or checkout), and the code that is actually imported must be that
+    distribution's own files (see ``_imported_replay_code_problem``).
+    """
     installed = _installed_replay_revision()
     if installed != expected:
         raise ImportContractError(
             f"installed Replay distribution revision {installed!r} is not the pinned revision {expected}; "
             f"install cogno-us/cognous-replay-bundle at {expected} (a trusted-revision claim is not emitted otherwise)")
+    problem = _imported_replay_code_problem()
+    if problem:
+        raise ImportContractError(f"imported Replay code is not the code of the installed distribution: {problem}")
 
 
 def _run_pinned_replay_validator(bundle: dict[str, Any]) -> str:
@@ -1404,7 +1494,7 @@ def import_manifest_reconstruction(manifest: dict[str, Any], reconstruction_bund
     redacted, redaction_source = _redaction_status(bundle, findings)
     evidence_levels = _evidence_levels(bundle, replay_validator_status, findings)
     metadata = bundle.get("metadata") if isinstance(bundle.get("metadata"), dict) else {}
-    pack = EvidencePack(pack_id=pack_id, pack_version="0.2.0", title=title or "Traceable Agent Governance Evidence Pack", generated_at=str(generated), review_status=ReviewStatus.draft, agent_overview=AgentOverview(agent_name=str(manifest.get("agent_name") or (manifest.get("agent", {}) if isinstance(manifest.get("agent"), dict) else {}).get("name") or "ImportedAgent"), agent_description=manifest.get("agent_description") or (manifest.get("agent", {}) if isinstance(manifest.get("agent"), dict) else {}).get("description"), business_purpose=str(manifest.get("business_purpose") or manifest.get("purpose") or "Imported from Manifest and Reconstruction Bundle; business purpose unavailable."), owner=manifest.get("owner") if isinstance(manifest.get("owner"), str) else None, business_unit=manifest.get("business_unit") if isinstance(manifest.get("business_unit"), str) else None, lifecycle_stage=metadata.get("deployment_status") if isinstance(metadata, dict) else None), deployment_context=DeploymentContext(environment=DeploymentEnvironment.other, deployment_name=str(manifest.get("deployment_name") or manifest.get("environment") or "imported"), systems_touched=[str(tool.get("external_system") or tool.get("tool_name")) for tool in manifest.get("tools", []) if isinstance(tool, dict) and (tool.get("external_system") or tool.get("tool_name"))], data_domains=[], notes="Generated from retained producer artifacts; does not establish deployment approval or operational effectiveness."), tool_inventory=tool_items, action_inventory=action_items, authority_model=AuthorityModelSummary(summary="Authority evidence imported from retained runtime records. This is not a grant or approval.", authority_scopes=[], privileged_action_types=sorted({item.action_type for item in action_items if item.authority_required}, key=lambda value: value.value), expiration_required=True, human_approval_required=any(item.review_required for item in action_items), notes="Authority Context profile references remain distinct from context-instance identifiers."), policy_controls=[PolicyControlSummary(control_name="Manifest declaration", description="Actions and requirements imported from Manifest v1.1. Declaration alone does not establish implementation.", control_status=ControlStatus.planned, evidence_reference="metadata.traceable_import.input_artifacts[manifest]"), PolicyControlSummary(control_name="Review and approval declaration", description="Manifest review_requirement and approval-related declarations are preserved for review support; declaration alone does not create human approval.", control_status=ControlStatus.planned, evidence_reference="manifest.actions[*].review_requirement"), PolicyControlSummary(control_name="Replay semantic import validation", description="The importer executed the accepted Replay semantic validator over retained producer records. This is import-time evidence checking, not evidence that runtime controls were operationally effective.", control_status=ControlStatus.implemented, evidence_reference="metadata.traceable_import.replay_semantic_validation"), PolicyControlSummary(control_name="Independent operational verification", description="No independent real-world effect verification supplied.", control_status=ControlStatus.planned, evidence_reference="metadata.traceable_import.lifecycle_summary.independent_verification")], replay_bundles=[ReplayBundleInventoryItem(bundle_id=bundle_id, run_id=str(bundle.get("run_id") or ""), status=str(replay_validator_status), generated_at=None if generated == "unavailable" else str(generated), signed=False, redacted=redacted, validation_status="semantically_valid", evidence_reference="metadata.traceable_import.source_record_refs")], validation_summary=ValidationSummary(valid_bundle_count=0 if errors else 1, invalid_bundle_count=1 if errors else 0, warning_count=len([finding for finding in findings if finding.get("severity") == "warning"]), error_count=errors, summary="Source artifacts were evaluated by supported semantic import checks; inspect the actual findings. This does not establish deployment approval, compliance, operational effectiveness, or independent audit."), metadata={"traceable_import": {"transformation_version": transformation, "canonicalization_profile": CANONICALIZATION_PROFILE,  "supported_revisions": {"manifest": MANIFEST_REVISION, "replay": REPLAY_REVISION, "control_plane": CONTROL_PLANE_REVISION, "moltbot_safe": MOLTBOT_SAFE_REVISION, "odes": ODES_REVISION, "gax_imx_experimental_reference": GAX_IMX_REVISION, "gax_imx_acceptance_status": "provisional_experimental_dependency", "alvorada": ALVORADA_REVISION}, "replay_semantic_validation": {"validator": "agent_replay_bundle.importers.import_bounded_workflow", "required_revision": REPLAY_REVISION, "status": replay_validator_status}, "replay_import_reports": bundle.get("import_reports", []), "replay_semantics": bundle.get("semantics", {}), "input_artifacts": [{"artifact_role": "manifest", "artifact_id": _manifest_id(manifest), "version": _manifest_version(manifest), "hash": sha256(manifest), "trusted_revision": MANIFEST_REVISION, "verification_status": "digest_and_cross_artifact_binding_checked_when_runtime_proposal_present", "commitment_source": "locally_computed", "canonicalization_profile": CANONICALIZATION_PROFILE}, {"artifact_role": "reconstruction_bundle", "artifact_id": bundle_id, "version": _bundle_version(bundle), "hash": sha256(bundle), "trusted_revision": REPLAY_REVISION, "verification_status": replay_validator_status, "commitment_source": "locally_computed", "canonicalization_profile": CANONICALIZATION_PROFILE}], "producer_profiles": _producer_profile_summaries(bundle), "executor_producer_contract": deepcopy((bundle.get("metadata") or {}).get("moltbot_producer_contract")) if isinstance((bundle.get("metadata") or {}).get("moltbot_producer_contract"), dict) else None, "source_record_refs": _source_record_refs(bundle), "conversion_losses": _conversion_losses(bundle), "derived_counts": counts | {"authorization_granted_count": auth.get("authorized", 0), "authorization_held_count": auth.get("hold", 0), "authorization_denied_count": auth.get("deny", 0)}, "lifecycle_summary": lifecycle, "control_evidence_levels": evidence_levels, "redaction_state": {"redacted": redacted, "source": redaction_source, "derivation": bundle.get("derivation")}, "import_findings": findings, "manual_assessments": [], "unresolved_issues": [{"code": "U_INDEPENDENT_VERIFICATION_UNAVAILABLE", "severity": "warning", "message": "Destination observation is producer-retained unless independent verifier evidence is supplied."}, {"code": "U_OPERATIONAL_EFFECTIVENESS_NOT_MEASURED", "severity": "warning", "message": "Synthetic import success cannot support operational effectiveness or deployment approval."}, {"code": "U_HISTORICAL_AUTHORIZATION_NOT_CURRENT_PERMISSION", "severity": "info", "message": "Retained authorization is historical evidence only; current permission must be re-evaluated by the runtime authority/control boundary."}, {"code": "U_EXCHANGE_METADATA_SUPPLEMENTARY", "severity": "info", "message": "Accepted GAX/IMX exchange metadata remains supplementary unless represented by a supported Replay mapping; the Evidence Pack does not invent exchange fields."}], "outcomes_and_burden": {"unresolved_delivery": "see lifecycle_summary.destination_observed", "incidents": "unavailable_not_zero", "remedies": "unavailable", "measured_latency": "not_measured", "human_review_effort": "not_measured", "error_prevention": "not_measured", "error_correction": "not_measured", "comparison_baseline_reference": "unavailable"}}})
+    pack = EvidencePack(pack_id=pack_id, pack_version="0.2.0", title=title or "Traceable Agent Governance Evidence Pack", generated_at=str(generated), review_status=ReviewStatus.draft, agent_overview=AgentOverview(agent_name=str(manifest.get("agent_name") or (manifest.get("agent", {}) if isinstance(manifest.get("agent"), dict) else {}).get("name") or "ImportedAgent"), agent_description=manifest.get("agent_description") or (manifest.get("agent", {}) if isinstance(manifest.get("agent"), dict) else {}).get("description"), business_purpose=str(manifest.get("business_purpose") or manifest.get("purpose") or "Imported from Manifest and Reconstruction Bundle; business purpose unavailable."), owner=manifest.get("owner") if isinstance(manifest.get("owner"), str) else None, business_unit=manifest.get("business_unit") if isinstance(manifest.get("business_unit"), str) else None, lifecycle_stage=metadata.get("deployment_status") if isinstance(metadata, dict) else None), deployment_context=DeploymentContext(environment=DeploymentEnvironment.other, deployment_name=str(manifest.get("deployment_name") or manifest.get("environment") or "imported"), systems_touched=[str(tool.get("external_system") or tool.get("tool_name")) for tool in manifest.get("tools", []) if isinstance(tool, dict) and (tool.get("external_system") or tool.get("tool_name"))], data_domains=[], notes="Generated from retained producer artifacts; does not establish deployment approval or operational effectiveness."), tool_inventory=tool_items, action_inventory=action_items, authority_model=AuthorityModelSummary(summary="Authority evidence imported from retained runtime records. This is not a grant or approval.", authority_scopes=[], privileged_action_types=sorted({item.action_type for item in action_items if item.authority_required}, key=lambda value: value.value), expiration_required=True, human_approval_required=any(item.review_required for item in action_items), notes="Authority Context profile references remain distinct from context-instance identifiers."), policy_controls=[PolicyControlSummary(control_name="Manifest declaration", description="Actions and requirements imported from Manifest v1.1. Declaration alone does not establish implementation.", control_status=ControlStatus.planned, evidence_reference="metadata.traceable_import.input_artifacts[manifest]"), PolicyControlSummary(control_name="Review and approval declaration", description="Manifest review_requirement and approval-related declarations are preserved for review support; declaration alone does not create human approval.", control_status=ControlStatus.planned, evidence_reference="manifest.actions[*].review_requirement"), PolicyControlSummary(control_name="Replay semantic import validation", description="The importer executed the accepted Replay semantic validator over retained producer records. This is import-time evidence checking, not evidence that runtime controls were operationally effective.", control_status=ControlStatus.implemented, evidence_reference="metadata.traceable_import.replay_semantic_validation"), PolicyControlSummary(control_name="Independent operational verification", description="No independent real-world effect verification supplied.", control_status=ControlStatus.planned, evidence_reference="metadata.traceable_import.lifecycle_summary.independent_verification")], replay_bundles=[ReplayBundleInventoryItem(bundle_id=bundle_id, run_id=str(bundle.get("run_id") or ""), status=str(replay_validator_status), generated_at=None if generated == "unavailable" else str(generated), signed=False, redacted=redacted, validation_status="semantically_valid" if _is_v2(bundle) else "inputs_reimported_only", evidence_reference="metadata.traceable_import.source_record_refs")], validation_summary=ValidationSummary(valid_bundle_count=0 if errors else 1, invalid_bundle_count=1 if errors else 0, warning_count=len([finding for finding in findings if finding.get("severity") == "warning"]), error_count=errors, summary="Source artifacts were evaluated by supported semantic import checks; inspect the actual findings. This does not establish deployment approval, compliance, operational effectiveness, or independent audit."), metadata={"traceable_import": {"transformation_version": transformation, "canonicalization_profile": CANONICALIZATION_PROFILE,  "supported_revisions": {"manifest": MANIFEST_REVISION, "replay": REPLAY_REVISION, "control_plane": CONTROL_PLANE_REVISION, "moltbot_safe": MOLTBOT_SAFE_REVISION, "odes": ODES_REVISION, "gax_imx_experimental_reference": GAX_IMX_REVISION, "gax_imx_acceptance_status": "provisional_experimental_dependency", "alvorada": ALVORADA_REVISION}, "replay_semantic_validation": {"validator": "agent_replay_bundle.importers.import_bounded_workflow", "required_revision": REPLAY_REVISION, "status": replay_validator_status}, "replay_import_reports": bundle.get("import_reports", []), "replay_semantics": bundle.get("semantics", {}), "input_artifacts": [{"artifact_role": "manifest", "artifact_id": _manifest_id(manifest), "version": _manifest_version(manifest), "hash": sha256(manifest), "trusted_revision": MANIFEST_REVISION, "verification_status": "digest_and_cross_artifact_binding_checked_when_runtime_proposal_present", "commitment_source": "locally_computed", "canonicalization_profile": CANONICALIZATION_PROFILE}, {"artifact_role": "reconstruction_bundle", "artifact_id": bundle_id, "version": _bundle_version(bundle), "hash": sha256(bundle), "trusted_revision": REPLAY_REVISION, "verification_status": replay_validator_status, "commitment_source": "locally_computed", "canonicalization_profile": CANONICALIZATION_PROFILE}], "producer_profiles": _producer_profile_summaries(bundle), "executor_producer_contract": deepcopy((bundle.get("metadata") or {}).get("moltbot_producer_contract")) if isinstance((bundle.get("metadata") or {}).get("moltbot_producer_contract"), dict) else None, "source_record_refs": _source_record_refs(bundle), "conversion_losses": _conversion_losses(bundle), "derived_counts": counts | {"authorization_granted_count": auth.get("authorized", 0), "authorization_held_count": auth.get("hold", 0), "authorization_denied_count": auth.get("deny", 0)}, "lifecycle_summary": lifecycle, "control_evidence_levels": evidence_levels, "redaction_state": {"redacted": redacted, "source": redaction_source, "derivation": bundle.get("derivation")}, "import_findings": findings, "manual_assessments": [], "unresolved_issues": [{"code": "U_INDEPENDENT_VERIFICATION_UNAVAILABLE", "severity": "warning", "message": "Destination observation is producer-retained unless independent verifier evidence is supplied."}, {"code": "U_OPERATIONAL_EFFECTIVENESS_NOT_MEASURED", "severity": "warning", "message": "Synthetic import success cannot support operational effectiveness or deployment approval."}, {"code": "U_HISTORICAL_AUTHORIZATION_NOT_CURRENT_PERMISSION", "severity": "info", "message": "Retained authorization is historical evidence only; current permission must be re-evaluated by the runtime authority/control boundary."}, {"code": "U_EXCHANGE_METADATA_SUPPLEMENTARY", "severity": "info", "message": "Accepted GAX/IMX exchange metadata remains supplementary unless represented by a supported Replay mapping; the Evidence Pack does not invent exchange fields."}], "outcomes_and_burden": {"unresolved_delivery": "see lifecycle_summary.destination_observed", "incidents": "unavailable_not_zero", "remedies": "unavailable", "measured_latency": "not_measured", "human_review_effort": "not_measured", "error_prevention": "not_measured", "error_correction": "not_measured", "comparison_baseline_reference": "unavailable"}}})
     if _is_v2(bundle):
         trace = pack.metadata["traceable_import"]
         selected_control_plane = _selected_control_plane_revision(bundle)

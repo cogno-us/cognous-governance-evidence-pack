@@ -483,6 +483,9 @@ def validate_evidence_pack(pack: EvidencePack) -> ValidationReport:
             )
 
     trace = pack.metadata.get("traceable_import")
+    if trace is None and (pack.pack_id.startswith("agep-") or pack.pack_version == "0.2.0"):
+        # An importer-identified pack (identifier prefix or schema version) must carry the trace that binds it to its sources.
+        issues.append(_error("E_TRACE_SEMANTICS", "Pack identifies as an import but carries no metadata.traceable_import to compare against retained sources.", "metadata.traceable_import"))
     if trace is not None:
         try:
             from .importer import import_manifest_reconstruction
