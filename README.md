@@ -70,7 +70,7 @@ agep check-examples
 
 ## Scope and compatibility
 
-Use the [current component lock](https://github.com/cogno-us/cognous-open-control-stack/blob/main/component-lock.json) for the selected revision. Current persistence-generation transformation is **0.3.1**; previous selected producer-2.0.0 transformation **0.3.0** and historical **0.2.6** remain distinct compatibility mappings. Imported pack schema remains **0.2.0**. See the [persistence checkpoint](docs/workstreams/evidence-pack-control-plane-store-checkpoint.md); older migration notes describe their original generation.
+Use the [current component lock](https://github.com/cogno-us/cognous-open-control-stack/blob/main/component-lock.json) for the selected revision. Transformations from **0.2.6** to **0.3.8** coexist as distinct compatibility mappings; the selected one is set by the hub's component lock, and an imported pack revalidates only in an environment with the Replay revision its generation pins (otherwise `agep validate` reports `E_TRACE_SEMANTICS`). Imported pack schema remains **0.2.0**. See the [persistence checkpoint](docs/workstreams/evidence-pack-control-plane-store-checkpoint.md); older migration notes describe their original generation.
 
 Test results, run commentary and historical qualification records are maintained in the [central test hub](https://github.com/cogno-us/cognous-stack-qualification/blob/main/results/readme-commentary/index.md). Read them against their recorded source revisions; source selection and deployment approval are separate decisions.
 

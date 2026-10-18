@@ -100,7 +100,7 @@ The **reliance summary** records the sources the agent relied on when generating
 
 ## Replay Bundle Inventory
 
-A **replay bundle** is a portable technical record of an agent run. The inventory records which replay bundles exist, whether they are signed (cryptographically verified) or redacted (prepared for export), and their validation status.
+A **replay bundle** is a portable technical record of an agent run. The inventory records which replay bundles exist, whether the caller asserts they are signed or redacted (not verified by this package), and their validation status.
 
 ---
 

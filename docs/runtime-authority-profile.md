@@ -12,7 +12,7 @@ The importer restores journal events and vocabulary changes before invoking the
 full Replay semantic comparison. It retains the exact reconstruction source,
 including purpose reads, unknown/interrupted checks, typed refusal version and
 approval/input/catalogue bindings. The usual Evidence Pack validation reconstructs
-and compares this trace; relabeled source counts cannot pass that comparison.
+and compares this trace when `metadata.traceable_import` is present, so relabeled source counts in an import cannot pass that comparison; a pack that identifies as an import without the marker is refused (`E_TRACE_SEMANTICS`), and a pack not marked as an import is treated as hand-authored (all fields are caller assertions).
 
 `refusal_vocabulary_summary` reports each versioned code over total refusal rows.
 The prior window and traffic exposure are unavailable unless separately supplied;

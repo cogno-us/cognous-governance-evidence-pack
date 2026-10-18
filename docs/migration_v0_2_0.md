@@ -64,7 +64,7 @@ New trace metadata includes:
 
 The control-evidence-level summary does not treat import success or runtime records as proof that a test occurred. Replay semantic validation performed during import, source-asserted runtime/fixture provenance and attributable test-run evidence are represented separately. `tested` remains unavailable unless complete attributable test provenance is supplied with meaningful string values for test run identity, producer, scope and result. Malformed provenance emits `T_TEST_PROVENANCE_INVALID`. Any resulting tested-evidence claim is limited to that precise scope and preserves source-stated outcomes such as `failed` or `inconclusive`. No such evidence establishes production effectiveness, adoption, certification, compliance or independent audit.
 
-No migration is required for hand-authored 0.1 packs or earlier 0.2.0 imported packs. Consumers that inspect `metadata.traceable_import` should tolerate the added keys.
+No migration is required for hand-authored 0.1 packs. Earlier 0.2.0 imported packs keep their format, but revalidating one re-runs the import, which requires the Replay revision that pack's generation pins: in an environment with a different Replay revision `agep validate` reports `E_TRACE_SEMANTICS` (one environment validates one generation at a time). Consumers that inspect `metadata.traceable_import` should tolerate the added keys.
 
 ## 0.3.1 Control Plane persistence compatibility
 

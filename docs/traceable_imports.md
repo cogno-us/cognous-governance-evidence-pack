@@ -22,8 +22,8 @@ The import path currently consumes a Manifest artifact and a Reconstruction Bund
 any import checks run. The 8 MiB byte budget, the depth limit (32) and the
 object/array node limit (100,000) apply. Duplicate JSON keys and the literal
 tokens `NaN`, `Infinity` and `-Infinity` are rejected. Out-of-range numeric
-literals such as `1e999` are not rejected; they parse as floating-point
-infinity. It needs the pinned Replay semantic
+literals such as `1e999` (`input_json_non_finite_number`) and lone surrogates
+(`input_not_utf8`) are refused. It needs the pinned Replay semantic
 validator (`cogno-us/cognous-replay-bundle` at
 `f63ce914504dd06813c4ccd199b0570dbd8dd427`) installed in the same
 environment. The working inputs are the pinned producer examples, the same
@@ -157,7 +157,7 @@ Evidence levels are deliberately separate:
 
 Historical authorization is retained as historical evidence. It does not establish current permission. Local destination observation is kept separate from independent institutional verification.
 
-Replay import findings are retained both as findings and as a conversion-loss register. Missing, unknown, unavailable and redacted states remain distinct; they are never normalized to success or zero.
+Replay import findings are retained both as findings and as a conversion-loss register. For producer-v2 bundles the findings are re-derived and must match the retained ones; for legacy bundles they are copied as supplied and may be incomplete. Missing, unknown, unavailable and redacted states that the import reports remain distinct; they are never normalized to success or zero.
 
 
 ## Executor producer profile migration
@@ -241,4 +241,4 @@ separately accepted compatibility updates.
 
 ## Retained Replay bundle comparison
 
-For producer-v2 bundles the importer re-runs the pinned Replay import over the retained records and requires the retained bundle to equal the fresh reconstruction in `records`, `links`, `commitments`, `producer_profiles`, `status`, `import_reports` and `semantics` (and the effect observation history and executor producer contract metadata). Import reports carry the unknown, unavailable and absent states, and `semantics` carry the non-promotion statements (no independent effect verification, producer-reported destination observation); neither can be dropped or altered without the import being refused. Other bundle fields (for example `bundle_id`, `generated_at`, `integrity`, remaining `metadata`) are not compared. Legacy (non-v2) bundles are not compared field by field.
+For producer-v2 bundles the importer re-runs the pinned Replay import over the retained records and requires the retained bundle to equal the fresh reconstruction in `records`, `links`, `commitments`, `producer_profiles`, `status`, `import_reports` and `semantics` (and the effect observation history and executor producer contract metadata). Import reports carry the unknown, unavailable and absent states, and `semantics` carry the non-promotion statements (no independent effect verification, producer-reported destination observation); neither can be dropped or altered without the import being refused. Other bundle fields (for example `bundle_id`, `generated_at`, `integrity`, remaining `metadata`) are not compared. Legacy (non-v2) bundles are not compared field by field: the importer re-imports their retained inputs and checks only the import status, so an imported legacy bundle carries `validation_status` `inputs_reimported_only` (producer-v2 bundles carry `semantically_valid`), and `trusted_revision` records the accepted pin, not an established trust fact. For legacy bundles the import findings, semantics, links and commitments are copied as supplied and may be incomplete.
