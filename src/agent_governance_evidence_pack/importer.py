@@ -91,13 +91,13 @@ P4_REVISIONS = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
     "control_plane": "26a7e6594eb535827ccc248cbca36a7d119d613b",
     "moltbot_safe": "3024ef6e6ecf7da22e5f4fdf90d873f93b2a55c9"}
 P4_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.7-security-runtime-p4-candidate"
-# Programme-2 generation (opt-in profiles): Control Plane 3cd17ead (N1-N5, merge-record/reversibility/dedupe-ttl, registry labels
-# 0.1/0.2, strict JSON, terminal-revocation, strict instants), runtime 11de097c (optional operation key on the atomic route), Replay 46e8bd7c (accepts and retains that
-# generation's members), Manifest 2c36bcd0. Exactly paired like P4; the opt-in profile members only appear in a run that has them.
-P2_REVISIONS = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
-    "replay": "46e8bd7c263f5075cac3a7a9defcb265384f40e9",
-    "control_plane": "3cd17ead6b24301290ad1e50ae4b22bbd93c12fb",
-    "moltbot_safe": "11de097c450d3ad4d89f9add41b00e38e7cc2c7c"}
+# Programme-2 generation (opt-in profiles): Control Plane 6093aca7 (3cd17ead plus the scan-fix stream; N1-N5, merge-record/reversibility/dedupe-ttl, registry labels
+# 0.1/0.2, strict JSON, terminal-revocation, strict instants), runtime 62a5cc15 (11de097c plus profile composition and producer export hardening), Replay c8e665bd (re-tied to these producers; accepts and retains that
+# generation's members), Manifest f9ae8527. Exactly paired like P4; the opt-in profile members only appear in a run that has them.
+P2_REVISIONS = {"manifest": "f9ae8527326c07e3177b5f003e626b23758be3d0",
+    "replay": "c8e665bd1936e4da90f6a324b486a320934c4bff",
+    "control_plane": "6093aca7b945698e89c0d8ac7c75306375e1a298",
+    "moltbot_safe": "62a5cc156ecb439b4103b757fd265f276bb30374"}
 P2_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.8-programme2-profiles-candidate"
 SECURITY_RUNTIME_GENERATIONS = {
     SECURITY_REVISIONS["control_plane"]: (SECURITY_REVISIONS, SECURITY_TRANSFORMATION_VERSION),
@@ -256,7 +256,7 @@ def _accepted_replay_v2_profiles(*, require_persistence: bool = False, require_m
 
 
 REQUIRED_REPOS = {
-    "cogno-us/cognous-agent-action-manifest": {MANIFEST_REVISION, SECURITY_REVISIONS["manifest"], F5B_REVISIONS["manifest"], P4_REVISIONS["manifest"]},
+    "cogno-us/cognous-agent-action-manifest": {MANIFEST_REVISION, SECURITY_REVISIONS["manifest"], F5B_REVISIONS["manifest"], P4_REVISIONS["manifest"], P2_REVISIONS["manifest"]},
     "cogno-us/cognous-agent-replay-bundle": {REPLAY_REVISION, V2_REVISIONS["replay"], ACCEPTED_REPLAY_PERSISTENCE_REVISION, MERGED_REVISIONS["replay"], REFUSAL_REVISIONS["replay"], RUNTIME_AUTHORITY_REVISIONS["replay"], SECURITY_REVISIONS["replay"], F5B_REVISIONS["replay"], P4_REVISIONS["replay"], P2_REVISIONS["replay"]},
     "cogno-us/cognous-agent-control-plane": {CONTROL_PLANE_REVISION, *ALL_CONTROL_PLANE_V2_REVISIONS},
     "cogno-us/moltbot-safe": {LEGACY_MOLTBOT_SAFE_REVISION, MOLTBOT_SAFE_REVISION, V2_REVISIONS["moltbot_safe"], MERGED_REVISIONS["moltbot_safe"], REFUSAL_REVISIONS["moltbot_safe"], RUNTIME_AUTHORITY_REVISIONS["moltbot_safe"], SECURITY_REVISIONS["moltbot_safe"], F5B_REVISIONS["moltbot_safe"], P4_REVISIONS["moltbot_safe"], P2_REVISIONS["moltbot_safe"]},
