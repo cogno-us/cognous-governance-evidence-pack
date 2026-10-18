@@ -5,7 +5,7 @@
 | Pack ID | ep-procurement-agent-2026-001 |
 | Version | 0.1 |
 | Generated At | 2026-07-01T11:00:00Z |
-| Review Status | approved_with_conditions |
+| Review Status (asserted, unverified) | approved_with_conditions |
 | Agent | ProcurementAgent |
 | Environment | production |
 | Owner | Head of Procurement |
@@ -13,12 +13,12 @@
 
 ## 1. Executive Summary
 
-**ProcurementAgent** is deployed in the **production** environment. Business purpose: Automate vendor quote comparison and purchase recommendation drafting for the procurement team, with human approval required before any purchase order is created or vendor is contacted.
+**ProcurementAgent** is represented in this evidence pack for the **production** environment. Business purpose: Automate vendor quote comparison and purchase recommendation drafting for the procurement team, with human approval required before any purchase order is created or vendor is contacted.
 
-The agent has access to **4** tool(s) and can propose **4** action(s), of which **2** require authority or human review.
+The pack records **4** tool(s), **4** action(s), **2** privileged/review-sensitive action(s), and **1** replay/reconstruction bundle reference(s).
 
-**1** replay bundle(s) are available (1 signed).
-Validation summary: 1 valid bundle(s), 0 invalid, 0 error(s), 0 warning(s).
+Validation summary (asserted, unverified): 1 valid bundle(s), 0 invalid bundle(s), 0 error(s), 0 warning(s).
+One replay bundle validated successfully. No errors or warnings.
 
 **1** open risk(s) (0 critical).
 This evidence pack is approved with conditions; see Section 14 for review notes.
@@ -68,12 +68,12 @@ This evidence pack is approved with conditions; see Section 14 for review notes.
 
 ## 5. Action Inventory
 
-| Action Name | Tool | Type | Authority Required | Review Required | Reliance Required | Control Status |
-|---|---|---|---|---|---|---|
-| read_vendor_quotes | vendor_db_read | read | No | No | Yes | implemented |
-| read_erp_budget | erp_read | read | No | No | Yes | implemented |
-| create_purchase_order | purchase_order_create | purchase | Yes | Yes | No | implemented |
-| send_vendor_email | vendor_email_send | external_send | Yes | Yes | No | implemented |
+| Action Name | Tool | Type | Authority Required | Review Required | Reliance Required | Default Posture | Control Status |
+|---|---|---|---|---|---|---|---|
+| read_vendor_quotes | vendor_db_read | read | No | No | Yes | allowed | implemented |
+| read_erp_budget | erp_read | read | No | No | Yes | allowed | implemented |
+| create_purchase_order | purchase_order_create | purchase | Yes | Yes | No | blocked | implemented |
+| send_vendor_email | vendor_email_send | external_send | Yes | Yes | No | blocked | implemented |
 
 ## 6. Authority Model
 
@@ -100,15 +100,11 @@ This evidence pack is approved with conditions; see Section 14 for review notes.
 
 ## 8. Blocked-Action Summary
 
-A total of **5** blocked action(s) are recorded in this evidence pack.
-
 | Action Name | Action Type | Tool | Count | Reason Summary | Evidence Reference |
 |---|---|---|---|---|---|
 | create_purchase_order | purchase | purchase_order_create | 5 | Five purchase order attempts were blocked due to missing authority grant. Agent initiated purchase flow without a valid authority token. | blocked-log-ep-procurement-001 |
 
 ## 9. Reliance Summary
-
-A total of **111** reliance record(s) are recorded in this evidence pack.
 
 | Source Name | Source Type | Count | Scope Summary | Evidence Reference |
 |---|---|---|---|---|
@@ -117,11 +113,15 @@ A total of **111** reliance record(s) are recorded in this evidence pack.
 
 ## 10. Replay Bundle Inventory
 
-| Bundle ID | Run ID | Status | Generated At | Signed | Redacted | Validation Status | Evidence Reference |
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
+
+| Bundle ID | Run ID | Status | Generated At | Signed (asserted, unverified) | Redacted (asserted, unverified) | Validation Status (asserted, unverified) | Evidence Reference |
 |---|---|---|---|---|---|---|---|
 | rb-procurement-agent-2026-001-a | run-procurement-001 | available | 2026-06-30T16:00:00Z | Yes | Yes | valid | replay-store/rb-procurement-agent-2026-001-a |
 
 ## 11. Validation Summary
+
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
 
 **Valid Bundles:** 1 | **Invalid Bundles:** 0 | **Errors:** 0 | **Warnings:** 0
 
@@ -129,6 +129,8 @@ One replay bundle validated successfully. No errors or warnings.
 
 
 ## 12. Redaction and Export Summary
+
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
 
 | Export ID | Type | Redacted Fields | Generated At | Intended Recipient | Evidence Reference |
 |---|---|---|---|---|---|
@@ -143,10 +145,12 @@ One replay bundle validated successfully. No errors or warnings.
 
 ## 14. Review Records
 
-| Reviewer | Role | Reviewed At | Decision | Notes |
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
+
+| Reviewer | Role | Reviewed At | Decision (asserted, unverified) | Notes |
 |---|---|---|---|---|
 | J. Martinez | Chief Risk Officer | 2026-07-01T11:00:00Z | approved_with_conditions | Approved with conditions: (1) Authority flow defect must be resolved within 30 days. (2) EMEA vendor data handling compliance review must be completed before EMEA rollout expansion. (3) Monthly blocked-action report required. |
 
 ## 15. Known Limitations
 
-This evidence pack summarizes available runtime and governance records. It does not prove that model outputs are correct, that policies are sufficient, or that external compliance obligations have been satisfied.
+This evidence pack summarizes available runtime and governance records. It does not prove that model outputs are correct, policy controls are sufficient, compliance obligations are satisfied, deployment is approved, controls are operationally effective, or independent audit has occurred. Schema validity and successful reconstruction are review aids only.

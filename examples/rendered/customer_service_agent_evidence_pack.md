@@ -5,7 +5,7 @@
 | Pack ID | ep-cs-agent-2026-001 |
 | Version | 0.1 |
 | Generated At | 2026-07-01T09:00:00Z |
-| Review Status | in_review |
+| Review Status (asserted, unverified) | in_review |
 | Agent | CustomerServiceAgent |
 | Environment | staging |
 | Owner | Head of Customer Operations |
@@ -13,14 +13,14 @@
 
 ## 1. Executive Summary
 
-**CustomerServiceAgent** is deployed in the **staging** environment. Business purpose: Automate routine customer query responses by reading CRM records and drafting reply emails for human review and approval before sending.
+**CustomerServiceAgent** is represented in this evidence pack for the **staging** environment. Business purpose: Automate routine customer query responses by reading CRM records and drafting reply emails for human review and approval before sending.
 
-The agent has access to **2** tool(s) and can propose **2** action(s), of which **1** require authority or human review.
+The pack records **2** tool(s), **2** action(s), **1** privileged/review-sensitive action(s), and **1** replay/reconstruction bundle reference(s).
 
-**1** replay bundle(s) are available (1 signed).
-Validation summary: 1 valid bundle(s), 0 invalid, 0 error(s), 0 warning(s).
+Validation summary (asserted, unverified): 1 valid bundle(s), 0 invalid bundle(s), 0 error(s), 0 warning(s).
+One replay bundle validated successfully. No errors or warnings.
 
-No open risks recorded.
+No open risks recorded. Absence of incident records does not prove absence of incidents.
 
 ## 2. Agent Overview
 
@@ -65,10 +65,10 @@ No open risks recorded.
 
 ## 5. Action Inventory
 
-| Action Name | Tool | Type | Authority Required | Review Required | Reliance Required | Control Status |
-|---|---|---|---|---|---|---|
-| read_customer_record | crm_read | read | No | No | Yes | implemented |
-| send_customer_email | email_send | external_send | Yes | Yes | No | implemented |
+| Action Name | Tool | Type | Authority Required | Review Required | Reliance Required | Default Posture | Control Status |
+|---|---|---|---|---|---|---|---|
+| read_customer_record | crm_read | read | No | No | Yes | allowed | implemented |
+| send_customer_email | email_send | external_send | Yes | Yes | No | blocked | implemented |
 
 ## 6. Authority Model
 
@@ -94,15 +94,11 @@ No open risks recorded.
 
 ## 8. Blocked-Action Summary
 
-A total of **3** blocked action(s) are recorded in this evidence pack.
-
 | Action Name | Action Type | Tool | Count | Reason Summary | Evidence Reference |
 |---|---|---|---|---|---|
 | send_customer_email | external_send | email_send | 3 | Outbound email send blocked in three instances due to missing authority grant. Agent attempted to send without completing the authority request flow. | blocked-log-ep-cs-2026-001 |
 
 ## 9. Reliance Summary
-
-A total of **47** reliance record(s) are recorded in this evidence pack.
 
 | Source Name | Source Type | Count | Scope Summary | Evidence Reference |
 |---|---|---|---|---|
@@ -110,11 +106,15 @@ A total of **47** reliance record(s) are recorded in this evidence pack.
 
 ## 10. Replay Bundle Inventory
 
-| Bundle ID | Run ID | Status | Generated At | Signed | Redacted | Validation Status | Evidence Reference |
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
+
+| Bundle ID | Run ID | Status | Generated At | Signed (asserted, unverified) | Redacted (asserted, unverified) | Validation Status (asserted, unverified) | Evidence Reference |
 |---|---|---|---|---|---|---|---|
 | rb-cs-agent-2026-001-a | run-cs-001 | available | 2026-06-30T18:00:00Z | Yes | Yes | valid | replay-store/rb-cs-agent-2026-001-a |
 
 ## 11. Validation Summary
+
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
 
 **Valid Bundles:** 1 | **Invalid Bundles:** 0 | **Errors:** 0 | **Warnings:** 0
 
@@ -122,6 +122,8 @@ One replay bundle validated successfully. No errors or warnings.
 
 
 ## 12. Redaction and Export Summary
+
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
 
 | Export ID | Type | Redacted Fields | Generated At | Intended Recipient | Evidence Reference |
 |---|---|---|---|---|---|
@@ -136,8 +138,8 @@ One replay bundle validated successfully. No errors or warnings.
 
 ## 14. Review Records
 
-No review records recorded.
+No review records recorded. Default review status remains unreviewed/draft unless supplied by an attributable human reviewer.
 
 ## 15. Known Limitations
 
-This evidence pack summarizes available runtime and governance records. It does not prove that model outputs are correct, that policies are sufficient, or that external compliance obligations have been satisfied.
+This evidence pack summarizes available runtime and governance records. It does not prove that model outputs are correct, policy controls are sufficient, compliance obligations are satisfied, deployment is approved, controls are operationally effective, or independent audit has occurred. Schema validity and successful reconstruction are review aids only.

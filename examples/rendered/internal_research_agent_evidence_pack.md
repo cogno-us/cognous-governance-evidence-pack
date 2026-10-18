@@ -5,7 +5,7 @@
 | Pack ID | ep-research-agent-2026-001 |
 | Version | 0.1 |
 | Generated At | 2026-07-01T10:00:00Z |
-| Review Status | draft |
+| Review Status (asserted, unverified) | draft |
 | Agent | InternalResearchAssistant |
 | Environment | development |
 | Owner | Head of Business Intelligence |
@@ -13,12 +13,12 @@
 
 ## 1. Executive Summary
 
-**InternalResearchAssistant** is deployed in the **development** environment. Business purpose: Improve internal research productivity by searching and summarizing internal documents, files, and knowledge repositories on behalf of business analysts.
+**InternalResearchAssistant** is represented in this evidence pack for the **development** environment. Business purpose: Improve internal research productivity by searching and summarizing internal documents, files, and knowledge repositories on behalf of business analysts.
 
-The agent has access to **3** tool(s) and can propose **3** action(s), of which **1** require authority or human review.
+The pack records **3** tool(s), **3** action(s), **1** privileged/review-sensitive action(s), and **1** replay/reconstruction bundle reference(s).
 
-**1** replay bundle(s) are available (0 signed).
-Validation summary: 1 valid bundle(s), 0 invalid, 0 error(s), 1 warning(s).
+Validation summary (asserted, unverified): 1 valid bundle(s), 0 invalid bundle(s), 0 error(s), 1 warning(s).
+One replay bundle validated. One warning regarding stale document sources.
 
 **2** open risk(s) (0 critical).
 
@@ -66,15 +66,15 @@ Validation summary: 1 valid bundle(s), 0 invalid, 0 error(s), 1 warning(s).
 
 ## 5. Action Inventory
 
-| Action Name | Tool | Type | Authority Required | Review Required | Reliance Required | Control Status |
-|---|---|---|---|---|---|---|
-| search_documents | document_search | read | No | No | Yes | implemented |
-| read_file | file_read | read | No | No | Yes | implemented |
-| export_research_summary | export_summary | export | No | Yes | No | partial |
+| Action Name | Tool | Type | Authority Required | Review Required | Reliance Required | Default Posture | Control Status |
+|---|---|---|---|---|---|---|---|
+| search_documents | document_search | read | No | No | Yes | allowed | implemented |
+| read_file | file_read | read | No | No | Yes | allowed | implemented |
+| export_research_summary | export_summary | export | No | Yes | No | requires_approval | partial |
 
 ## 6. Authority Model
 
-No authority model recorded for this evidence pack.
+No authority model recorded.
 
 ## 7. Policy Controls
 
@@ -89,8 +89,6 @@ No blocked actions recorded.
 
 ## 9. Reliance Summary
 
-A total of **146** reliance record(s) are recorded in this evidence pack.
-
 | Source Name | Source Type | Count | Scope Summary | Evidence Reference |
 |---|---|---|---|---|
 | Internal Document Repository | document_store | 112 | 112 document searches conducted during development testing period. Content used for summary generation. | reliance-log-ep-research-001 |
@@ -98,11 +96,15 @@ A total of **146** reliance record(s) are recorded in this evidence pack.
 
 ## 10. Replay Bundle Inventory
 
-| Bundle ID | Run ID | Status | Generated At | Signed | Redacted | Validation Status | Evidence Reference |
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
+
+| Bundle ID | Run ID | Status | Generated At | Signed (asserted, unverified) | Redacted (asserted, unverified) | Validation Status (asserted, unverified) | Evidence Reference |
 |---|---|---|---|---|---|---|---|
 | rb-research-agent-2026-001-a | run-research-001 | available | 2026-06-30T12:00:00Z | No | No | valid | replay-store/rb-research-agent-2026-001-a |
 
 ## 11. Validation Summary
+
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
 
 **Valid Bundles:** 1 | **Invalid Bundles:** 0 | **Errors:** 0 | **Warnings:** 1
 
@@ -122,8 +124,8 @@ No redaction or export records recorded.
 
 ## 14. Review Records
 
-No review records recorded.
+No review records recorded. Default review status remains unreviewed/draft unless supplied by an attributable human reviewer.
 
 ## 15. Known Limitations
 
-This evidence pack summarizes available runtime and governance records. It does not prove that model outputs are correct, that policies are sufficient, or that external compliance obligations have been satisfied.
+This evidence pack summarizes available runtime and governance records. It does not prove that model outputs are correct, policy controls are sufficient, compliance obligations are satisfied, deployment is approved, controls are operationally effective, or independent audit has occurred. Schema validity and successful reconstruction are review aids only.

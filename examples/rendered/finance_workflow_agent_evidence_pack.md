@@ -5,7 +5,7 @@
 | Pack ID | ep-finance-agent-2026-001 |
 | Version | 0.1 |
 | Generated At | 2026-07-01T12:00:00Z |
-| Review Status | approved_with_conditions |
+| Review Status (asserted, unverified) | approved_with_conditions |
 | Agent | FinanceWorkflowAgent |
 | Environment | production |
 | Owner | Chief Financial Officer |
@@ -13,14 +13,14 @@
 
 ## 1. Executive Summary
 
-**FinanceWorkflowAgent** is deployed in the **production** environment. Business purpose: Streamline invoice review and payment approval workflows by reading invoice data, validating against purchase orders, and proposing payment approvals for human authorization.
+**FinanceWorkflowAgent** is represented in this evidence pack for the **production** environment. Business purpose: Streamline invoice review and payment approval workflows by reading invoice data, validating against purchase orders, and proposing payment approvals for human authorization.
 
-The agent has access to **4** tool(s) and can propose **4** action(s), of which **2** require authority or human review.
+The pack records **4** tool(s), **4** action(s), **2** privileged/review-sensitive action(s), and **2** replay/reconstruction bundle reference(s).
 
-**2** replay bundle(s) are available (2 signed).
-Validation summary: 2 valid bundle(s), 0 invalid, 0 error(s), 0 warning(s).
+Validation summary (asserted, unverified): 2 valid bundle(s), 0 invalid bundle(s), 0 error(s), 0 warning(s).
+Two replay bundles validated successfully. No errors or warnings.
 
-No open risks recorded.
+No open risks recorded. Absence of incident records does not prove absence of incidents.
 This evidence pack is approved with conditions; see Section 14 for review notes.
 
 ## 2. Agent Overview
@@ -68,12 +68,12 @@ This evidence pack is approved with conditions; see Section 14 for review notes.
 
 ## 5. Action Inventory
 
-| Action Name | Tool | Type | Authority Required | Review Required | Reliance Required | Control Status |
-|---|---|---|---|---|---|---|
-| read_invoice | invoice_read | read | No | No | Yes | implemented |
-| match_invoice_to_po | erp_po_read | read | No | No | Yes | implemented |
-| propose_payment_approval | payment_approve | approve | Yes | Yes | No | implemented |
-| export_audit_record | audit_export | export | No | Yes | No | implemented |
+| Action Name | Tool | Type | Authority Required | Review Required | Reliance Required | Default Posture | Control Status |
+|---|---|---|---|---|---|---|---|
+| read_invoice | invoice_read | read | No | No | Yes | allowed | implemented |
+| match_invoice_to_po | erp_po_read | read | No | No | Yes | allowed | implemented |
+| propose_payment_approval | payment_approve | approve | Yes | Yes | No | blocked | implemented |
+| export_audit_record | audit_export | export | No | Yes | No | requires_approval | implemented |
 
 ## 6. Authority Model
 
@@ -100,15 +100,11 @@ This evidence pack is approved with conditions; see Section 14 for review notes.
 
 ## 8. Blocked-Action Summary
 
-A total of **2** blocked action(s) are recorded in this evidence pack.
-
 | Action Name | Action Type | Tool | Count | Reason Summary | Evidence Reference |
 |---|---|---|---|---|---|
 | propose_payment_approval | approve | payment_approve | 2 | Two payment approval proposals were blocked due to expired authority grants. Approvals resubmitted with valid authority on the following business day. | blocked-log-ep-finance-001 |
 
 ## 9. Reliance Summary
-
-A total of **390** reliance record(s) are recorded in this evidence pack.
 
 | Source Name | Source Type | Count | Scope Summary | Evidence Reference |
 |---|---|---|---|---|
@@ -117,12 +113,16 @@ A total of **390** reliance record(s) are recorded in this evidence pack.
 
 ## 10. Replay Bundle Inventory
 
-| Bundle ID | Run ID | Status | Generated At | Signed | Redacted | Validation Status | Evidence Reference |
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
+
+| Bundle ID | Run ID | Status | Generated At | Signed (asserted, unverified) | Redacted (asserted, unverified) | Validation Status (asserted, unverified) | Evidence Reference |
 |---|---|---|---|---|---|---|---|
 | rb-finance-agent-2026-001-a | run-finance-001 | available | 2026-06-30T20:00:00Z | Yes | No | valid | replay-store/rb-finance-agent-2026-001-a |
 | rb-finance-agent-2026-001-b | run-finance-002 | available | 2026-07-01T06:00:00Z | Yes | Yes | valid | replay-store/rb-finance-agent-2026-001-b |
 
 ## 11. Validation Summary
+
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
 
 **Valid Bundles:** 2 | **Invalid Bundles:** 0 | **Errors:** 0 | **Warnings:** 0
 
@@ -130,6 +130,8 @@ Two replay bundles validated successfully. No errors or warnings.
 
 
 ## 12. Redaction and Export Summary
+
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
 
 | Export ID | Type | Redacted Fields | Generated At | Intended Recipient | Evidence Reference |
 |---|---|---|---|---|---|
@@ -145,10 +147,12 @@ Two replay bundles validated successfully. No errors or warnings.
 
 ## 14. Review Records
 
-| Reviewer | Role | Reviewed At | Decision | Notes |
+_These values are caller assertions recorded in the pack. They are not verified by this renderer: no reviewer identity, signature, redaction or validation result is checked._
+
+| Reviewer | Role | Reviewed At | Decision (asserted, unverified) | Notes |
 |---|---|---|---|---|
 | A. Thompson | Chief Financial Officer | 2026-07-01T12:00:00Z | approved_with_conditions | Approved with conditions: (1) Authority renewal process must be formalized and documented within 14 days. (2) Incomplete invoice match handling must be reviewed and tested before the next payment run. (3) Quarterly evidence pack review scheduled. |
 
 ## 15. Known Limitations
 
-This evidence pack summarizes available runtime and governance records. It does not prove that model outputs are correct, that policies are sufficient, or that external compliance obligations have been satisfied.
+This evidence pack summarizes available runtime and governance records. It does not prove that model outputs are correct, policy controls are sufficient, compliance obligations are satisfied, deployment is approved, controls are operationally effective, or independent audit has occurred. Schema validity and successful reconstruction are review aids only.

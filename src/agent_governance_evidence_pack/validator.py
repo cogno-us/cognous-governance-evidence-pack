@@ -18,6 +18,15 @@ from .models import (
 )
 
 
+# Fields that may differ from the fresh reconstruction. A human reviewer adds or changes the review overlay after import;
+# ``title`` is the caller's presentation label (the importer takes it as an argument and does not retain it, so it cannot be
+# re-derived; the renderers escape it). Every other member of an imported pack must equal the fresh reconstruction;
+# ``metadata`` is compared through ``traceable_import`` below and its other keys are free extension space.
+REVIEW_OVERLAY_FIELDS = frozenset({
+    "title", "review_status", "review_records", "risk_register", "blocked_actions", "reliance_summary", "redaction_exports",
+})
+
+
 def _error(code: str, message: str, path: str | None = None) -> ValidationIssue:
     return ValidationIssue(
         severity=ValidationSeverity.error,
@@ -484,9 +493,14 @@ def validate_evidence_pack(pack: EvidencePack) -> ValidationReport:
                 title=pack.title, generated_at=pack.generated_at)
             if trace != expected.metadata["traceable_import"]:
                 raise ValueError("traceable transformation differs from retained source reconstruction")
-            for field in ("pack_id", "replay_bundles", "validation_summary", "action_inventory", "policy_controls", "authority_model"):
-                if getattr(pack, field) != getattr(expected, field):
+            actual_dump, expected_dump = pack.model_dump(mode="json"), expected.model_dump(mode="json")
+            for field in sorted(expected_dump):
+                if field in REVIEW_OVERLAY_FIELDS or field == "metadata":
+                    continue
+                if actual_dump.get(field) != expected_dump[field]:
                     raise ValueError(f"{field} differs from retained source reconstruction")
+            if set(actual_dump) - set(expected_dump):
+                raise ValueError("pack carries a member the retained source reconstruction does not")
         except Exception as exc:
             issues.append(_error("E_TRACE_SEMANTICS", f"Retained Replay semantic validation failed: {exc}", "metadata.traceable_import"))
 

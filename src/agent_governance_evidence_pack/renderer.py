@@ -8,7 +8,7 @@ from .summary import summarize_evidence_pack
 def _escape(value: object) -> str:
     if value is None:
         return ""
-    return html_escape("".join(c if ord(c) >= 32 and not 127 <= ord(c) <= 159 else f"&#{ord(c)};" for c in str(value)), quote=False).replace("|", "\\|").replace("\r", "&#13;").replace("\n", "&#10;").replace("`", "&#96;").replace("[", "&#91;").replace("]", "&#93;")
+    return html_escape("".join(c if ord(c) >= 32 and not 127 <= ord(c) <= 159 else f"&#{ord(c)};" for c in str(value)), quote=False).replace("\\", "&#92;").replace("|", "\\|").replace("\r", "&#13;").replace("\n", "&#10;").replace("`", "&#96;").replace("[", "&#91;").replace("]", "&#93;")
 
 
 A = " (asserted, unverified)"

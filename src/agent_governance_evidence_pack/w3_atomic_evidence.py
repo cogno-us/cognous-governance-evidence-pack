@@ -15,6 +15,8 @@ RECONSTRUCTION_VERSION = "0.2.0"
 class W3EvidenceContractError(ValueError):
     pass
 
+LINK_IDENTITY_KEYS = ("effect_id", "decision_id", "attempt_id")
+
 def transform_atomic_failure_reconstruction(bundle: dict[str, Any]) -> dict[str, Any]:
     """Preserve exact producer semantics; project into non-authorizing review data.
 
@@ -49,10 +51,21 @@ def transform_atomic_failure_reconstruction(bundle: dict[str, Any]) -> dict[str,
     if not isinstance(links,list):
         raise W3EvidenceContractError("links must be array")
     for l in links:
-        if not isinstance(l,dict) or l.get("from_record_id") not in byid or l.get("to_record_id") not in byid:
+        if not isinstance(l, dict):
             raise W3EvidenceContractError("dangling source lineage link")
-        if byid[l["from_record_id"]]["record_type"]!="atomic_failure" or byid[l["to_record_id"]]["record_type"]!="atomic_attempt":
+        src, dst = l.get("from_record_id"), l.get("to_record_id")
+        if not isinstance(src, str) or not isinstance(dst, str) or src not in byid or dst not in byid:
+            raise W3EvidenceContractError("dangling source lineage link")
+        if byid[src]["record_type"]!="atomic_failure" or byid[dst]["record_type"]!="atomic_attempt":
             raise W3EvidenceContractError("contradictory failure-to-attempt lineage")
+        # The two records must name the same (effect, decision, attempt) identity; a link between unrelated rows is refused.
+        failure_ids, attempt_ids = byid[src].get("identifiers"), byid[dst].get("identifiers")
+        if not isinstance(failure_ids, dict) or not isinstance(attempt_ids, dict):
+            raise W3EvidenceContractError("lineage link records carry no identifiers")
+        failure_tuple = tuple(failure_ids.get(k) for k in LINK_IDENTITY_KEYS)
+        attempt_tuple = tuple(attempt_ids.get(k) for k in LINK_IDENTITY_KEYS)
+        if not all(isinstance(v, str) and v for v in failure_tuple) or failure_tuple != attempt_tuple:
+            raise W3EvidenceContractError("lineage link identity tuple mismatch")
     semantics=bundle.get("semantics",{})
     if not isinstance(semantics,dict) or semantics.get("external_effect_execution") is not False or semantics.get("independent_effect_verification") is not False:
         raise W3EvidenceContractError("non-authorizing replay semantics required")
@@ -62,6 +75,11 @@ def transform_atomic_failure_reconstruction(bundle: dict[str, Any]) -> dict[str,
     reports=bundle.get("import_reports")
     if not isinstance(reports,list) or len(reports)!=1 or not isinstance(reports[0],dict):
         raise W3EvidenceContractError("source import report required")
+    # The completeness the report supports; a bundle may never claim more than its own import report shows.
+    findings=reports[0].get("findings",[])
+    report_complete = reports[0].get("complete") is True and isinstance(findings,list) and not findings
+    if status=="reconstruction_complete" and not report_complete:
+        raise W3EvidenceContractError("bundle status claims completeness its import report does not show")
     counts={key:sum(r["record_type"]==key for r in records) for key in
         ("atomic_failure","atomic_attempt","atomic_observation")}
     return {
@@ -70,6 +88,7 @@ def transform_atomic_failure_reconstruction(bundle: dict[str, Any]) -> dict[str,
         "source_producer_revision":REPLAY_RUNTIME_REVISION,
         "source_producer_profile":REPLAY_PRODUCER_PROFILE,
         "reconstruction_status":status,
+        "report_supports_complete":report_complete,
         "retained_records":records,
         "retained_links":links,
         "retained_import_findings":reports[0].get("findings",[]),
