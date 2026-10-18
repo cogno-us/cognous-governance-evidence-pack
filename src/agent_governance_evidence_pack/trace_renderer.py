@@ -7,7 +7,7 @@ from .renderer import render_markdown
 
 def _escape(v: object) -> str:
     if v is None: return ""
-    return html_escape("".join(c if ord(c) >= 32 and not 127 <= ord(c) <= 159 else f"&#{ord(c)};" for c in str(v)), quote=False).replace("|", "\\|").replace("\r", "&#13;").replace("\n", "&#10;").replace("`", "&#96;").replace("[", "&#91;").replace("]", "&#93;")
+    return html_escape("".join(c if ord(c) >= 32 and not 127 <= ord(c) <= 159 else f"&#{ord(c)};" for c in str(v)), quote=False).replace("\\", "&#92;").replace("|", "\\|").replace("\r", "&#13;").replace("\n", "&#10;").replace("`", "&#96;").replace("[", "&#91;").replace("]", "&#93;")
 def _or_dash(v: object) -> str: return "—" if v in (None,"",[],{}) else str(v)
 
 def render_traceable_markdown(pack: EvidencePack) -> str:

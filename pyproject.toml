@@ -17,9 +17,10 @@ dependencies = [
 [project.optional-dependencies]
 # Pinned Replay semantic validator imported by agent_governance_evidence_pack.importer
 # (agent_replay_bundle.importers.import_bounded_workflow). Required for traceable imports; the revision to install is
-# set by the importer's pinned revision constants (and CI), not by this unpinned declaration.
+# set by the importer's pinned revision constants; the extra names the Programme-2 Replay revision in full, and the importer
+# refuses to emit a trusted-revision claim unless the installed distribution's recorded commit equals the pinned revision.
 replay = [
-    "agent-replay-bundle @ git+https://github.com/cogno-us/cognous-replay-bundle",
+    "agent-replay-bundle @ git+https://github.com/cogno-us/cognous-replay-bundle@46e8bd7c263f5075cac3a7a9defcb265384f40e9",
 ]
 dev = [
     "pytest>=7.0",

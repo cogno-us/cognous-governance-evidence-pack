@@ -82,7 +82,22 @@ def _scan_text(value):
             stack.extend(item)
 
 
+def _plain(item):
+    """Copy of an already budget-checked value made only of exact builtin types (subclasses cannot override what is checked)."""
+    if isinstance(item, str):
+        return str.__add__(item, "")
+    if isinstance(item, float) and not isinstance(item, bool):
+        return float.__add__(item, 0.0)
+    if isinstance(item, dict):
+        return {_plain(k): _plain(v) for k, v in dict.items(item)}
+    if isinstance(item, (list, tuple)):
+        values = [_plain(v) for v in (list.__iter__(item) if isinstance(item, list) else tuple.__iter__(item))]
+        return tuple(values) if isinstance(item, tuple) else values
+    return item
+
+
 def admit_value(value):
+    """Check structural, size and text budgets over every dict/list/str/float (subclasses included) and return builtin copies."""
     stack = [(value, 0)]
     nodes = size = 0
     while stack:
@@ -90,21 +105,22 @@ def admit_value(value):
         nodes += 1
         if nodes > 100000 or depth > 32:
             raise ValueError('evidence structural budget exceeded')
-        if type(item) is float and not math.isfinite(item):
+        if isinstance(item, float) and not isinstance(item, bool) and not math.isfinite(float.__add__(item, 0.0)):
             raise ValueError(f'[{INPUT_NON_FINITE_NUMBER}] nonfinite evidence number')
-        if type(item) is str:
+        if isinstance(item, str):
+            item = str.__add__(item, "")
             if len(item) > 1048576:
                 raise ValueError('evidence string budget exceeded')
             _refuse_surrogate(item)
             size += len(item.encode('utf-8'))
-        elif type(item) is dict:
-            if len(item) > 4096:
+        elif isinstance(item, dict):
+            if dict.__len__(item) > 4096:
                 raise ValueError('evidence field budget exceeded')
-            stack.extend((v, depth + 1) for pair in item.items() for v in pair)
-        elif type(item) in (list, tuple):
-            if len(item) > 10000:
+            stack.extend((v, depth + 1) for pair in dict.items(item) for v in pair)
+        elif isinstance(item, (list, tuple)):
+            if (list.__len__(item) if isinstance(item, list) else tuple.__len__(item)) > 10000:
                 raise ValueError('evidence collection budget exceeded')
-            stack.extend((v, depth + 1) for v in item)
+            stack.extend((v, depth + 1) for v in (list.__iter__(item) if isinstance(item, list) else tuple.__iter__(item)))
         if size > MAX_JSON_BYTES:
             raise ValueError('evidence byte budget exceeded')
-    return value
+    return _plain(value)
