@@ -727,14 +727,36 @@ def _expected_replay_revision(bundle: dict[str, Any]) -> str:
     return REPLAY_REVISION
 
 
-def _installed_replay_revision() -> str | None:
-    """Commit the installed ``agent-replay-bundle`` distribution was installed from, or None when it cannot be established.
+def _checkout_head(root: str) -> str | None:
+    """HEAD of the git checkout at ``root`` when no tracked source file is modified, else None.
 
-    A VCS install records its commit (PEP 610 ``direct_url.json``). A local-directory (for example editable) install is
-    accepted only when that directory is a git checkout with no modification to tracked source files; its HEAD is the revision.
+    Installing or importing rewrites tracked ``*.egg-info`` metadata and byte-code in some older checkouts; neither is source.
+    """
+    import subprocess
+
+    def git(*args: str) -> str:
+        return subprocess.run(["git", "-C", root, *args], check=True, capture_output=True, text=True, timeout=30).stdout.strip()
+
+    try:
+        for line in git("status", "--porcelain", "--untracked-files=no").splitlines():
+            path = line[3:]
+            if ".egg-info/" not in path and "__pycache__/" not in path and not path.endswith(".pyc"):
+                return None
+        head = git("rev-parse", "HEAD")
+    except Exception:
+        return None
+    return head if re.fullmatch(r"[0-9a-f]{40}", head) else None
+
+
+def _installed_replay_revision() -> str | None:
+    """Commit the importable ``agent_replay_bundle`` code comes from, or None when it cannot be established.
+
+    A VCS install records its commit (PEP 610 ``direct_url.json``). A local-directory install, or code imported from a
+    checkout, is accepted only when that git checkout has no modified tracked source file; its HEAD is the revision.
     """
     import importlib.metadata as metadata
-    import subprocess
+    import importlib.util
+    from pathlib import Path as _Path
     from urllib.parse import unquote, urlparse
     try:
         raw = metadata.distribution("agent-replay-bundle").read_text("direct_url.json")
@@ -744,17 +766,20 @@ def _installed_replay_revision() -> str | None:
             return commit
         url = urlparse(str(info.get("url", "")))
         if "dir_info" in info and url.scheme == "file":
-            root = unquote(url.path)
-            def git(*args: str) -> str:
-                return subprocess.run(["git", "-C", root, *args], check=True, capture_output=True, text=True, timeout=30).stdout.strip()
-            # Installing rewrites tracked ``*.egg-info`` metadata in older checkouts; that is not source modification.
-            if any(".egg-info/" not in line for line in git("status", "--porcelain", "--untracked-files=no").splitlines()):
-                return None
-            head = git("rev-parse", "HEAD")
-            return head if re.fullmatch(r"[0-9a-f]{40}", head) else None
+            return _checkout_head(unquote(url.path))
+    except Exception:
+        pass
+    try:
+        spec = importlib.util.find_spec("agent_replay_bundle")
+        if spec is None or not spec.origin:
+            return None
+        import subprocess
+        package_dir = str(_Path(spec.origin).resolve().parent)
+        top = subprocess.run(["git", "-C", package_dir, "rev-parse", "--show-toplevel"], check=True, capture_output=True,
+                             text=True, timeout=30).stdout.strip()
+        return _checkout_head(top)
     except Exception:
         return None
-    return None
 
 
 def _require_pinned_replay_distribution(expected: str) -> None:

@@ -344,3 +344,41 @@ def test_rewritten_egg_info_does_not_count_as_a_modification(monkeypatch, tmp_pa
     (info / "PKG-INFO").write_text("b\n")
     _fake_distribution(monkeypatch, {"url": root.as_uri(), "dir_info": {"editable": True}})
     assert imp._installed_replay_revision() == head
+
+
+@pytest.mark.real_distribution_check
+def test_tracked_bytecode_changes_do_not_count_as_a_modification(monkeypatch, tmp_path):
+    import subprocess
+    root, _ = _checkout(tmp_path)
+    cache = root / "__pycache__"
+    cache.mkdir()
+    (cache / "m.cpython-312.pyc").write_bytes(b"a")
+    git = lambda *a: subprocess.run(["git", "-C", str(root), "-c", "user.email=t@example.invalid", "-c", "user.name=t", *a], check=True, capture_output=True, text=True).stdout.strip()  # noqa: E731
+    git("add", "-f", "__pycache__")
+    git("commit", "-q", "-m", "pyc")
+    head = git("rev-parse", "HEAD")
+    (cache / "m.cpython-312.pyc").write_bytes(b"b")
+    _fake_distribution(monkeypatch, {"url": root.as_uri(), "dir_info": {"editable": True}})
+    assert imp._installed_replay_revision() == head
+
+
+@pytest.mark.real_distribution_check
+def test_code_imported_from_a_checkout_without_install_metadata_reports_the_checkout_head(monkeypatch, tmp_path):
+    import importlib.util
+    import types
+    root, head = _checkout(tmp_path)
+    _fake_distribution(monkeypatch, {})
+    monkeypatch.setattr(importlib.util, "find_spec", lambda name: types.SimpleNamespace(origin=str(root / "m.py")))
+    assert imp._installed_replay_revision() == head
+
+
+@pytest.mark.real_distribution_check
+def test_code_outside_any_checkout_without_install_metadata_is_not_trusted(monkeypatch, tmp_path):
+    import importlib.util
+    import types
+    plain = tmp_path / "site"
+    plain.mkdir()
+    (plain / "m.py").write_text("x = 1\n")
+    _fake_distribution(monkeypatch, {})
+    monkeypatch.setattr(importlib.util, "find_spec", lambda name: types.SimpleNamespace(origin=str(plain / "m.py")))
+    assert imp._installed_replay_revision() is None
