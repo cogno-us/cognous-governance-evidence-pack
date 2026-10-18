@@ -91,13 +91,13 @@ P4_REVISIONS = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
     "control_plane": "26a7e6594eb535827ccc248cbca36a7d119d613b",
     "moltbot_safe": "3024ef6e6ecf7da22e5f4fdf90d873f93b2a55c9"}
 P4_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.7-security-runtime-p4-candidate"
-# Programme-2 generation (opt-in profiles): Control Plane 3755c71a (N1-N5, merge-record/reversibility/dedupe-ttl, registry labels
-# 0.1/0.2, strict JSON), runtime 7170da59 (optional operation key on the atomic route), Replay 541180fd (accepts and retains that
+# Programme-2 generation (opt-in profiles): Control Plane 3cd17ead (N1-N5, merge-record/reversibility/dedupe-ttl, registry labels
+# 0.1/0.2, strict JSON, terminal-revocation, strict instants), runtime 11de097c (optional operation key on the atomic route), Replay 46e8bd7c (accepts and retains that
 # generation's members), Manifest 2c36bcd0. Exactly paired like P4; the opt-in profile members only appear in a run that has them.
 P2_REVISIONS = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
-    "replay": "541180fde891a3048b8a61e77518f3311917e00b",
-    "control_plane": "3755c71a20eab1a41135967b682342c809929572",
-    "moltbot_safe": "7170da59e04854a3dbe13f151400d0ac368b8dcb"}
+    "replay": "46e8bd7c263f5075cac3a7a9defcb265384f40e9",
+    "control_plane": "3cd17ead6b24301290ad1e50ae4b22bbd93c12fb",
+    "moltbot_safe": "11de097c450d3ad4d89f9add41b00e38e7cc2c7c"}
 P2_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.8-programme2-profiles-candidate"
 SECURITY_RUNTIME_GENERATIONS = {
     SECURITY_REVISIONS["control_plane"]: (SECURITY_REVISIONS, SECURITY_TRANSFORMATION_VERSION),

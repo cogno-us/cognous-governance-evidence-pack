@@ -1,4 +1,4 @@
 {
- "source": "Inputs copied unchanged from cogno-us/cognous-replay-bundle 541180fd (tests/fixtures/programme2_paired and tests/fixtures/programme2_profiles; provenance and capture scripts there). Real Control Plane 3755c71a run records and runtime 7170da59 exports, synthetic data. manifest.json is the Control Plane's own tests manifest (tests.test_runtime_authority.manifest()), its commitment equals the proposals' manifest_digest.",
+ "source": "Inputs copied unchanged from cogno-us/cognous-replay-bundle 46e8bd7c (tests/fixtures/programme2_paired and tests/fixtures/programme2_profiles; provenance and capture scripts there). Real Control Plane 3cd17ead run records and runtime 11de097c exports, synthetic data. manifest.json is the Control Plane's own tests manifest (tests.test_runtime_authority.manifest(), identical at 3cd17ead), its commitment equals the proposals' manifest_digest.",
  "used_by": "tests/test_p2_generation.py (end to end against the installed Replay when it lists this generation; skipped otherwise)"
 }

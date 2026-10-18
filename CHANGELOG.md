@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Programme-2 generation re-tied to Control Plane `3cd17ead` (was `3755c71a`), runtime `11de097c` (was `7170da59`) and Replay `46e8bd7c` (was `541180fd`); `P2_REVISIONS` feeds `SECURITY_RUNTIME_GENERATIONS`, `ALL_CONTROL_PLANE_V2_REVISIONS` and `REQUIRED_REPOS`, so bundles with the earlier control plane, runtime or Replay of this generation are refused (replaced, not kept). The executor-paired inputs and four control-plane records under `tests/fixtures/p2_generation` are re-copied from Replay 46e8bd7c, plus a terminal-revocation record. Export shape unchanged; no change to what the pack reads.
 - Input bounds and error reporting: admission refuses a number that overflows to a non-finite value and a lone surrogate in text, with the same code family as the Control Plane strict loader (`input_json_non_finite_number`, `input_not_utf8`), as a clean exit 2 refusal with a coded message. Valid input parses identically (every example and fixture file compared with `json.loads`); the generation and pairing tables are untouched.
 
 - Programme-2 executor pairing moved from the runtime `fc034d14` to `7170da59` (runtime main after #113, opt-in `dedupe-ttl/0.1` destination) and Replay to `541180fd` (merge of the matching Replay change; exact pairing replaced, not kept: a bundle with the earlier runtime is refused). The runtime export shape is unchanged between the two; the four executor-paired inputs under `tests/fixtures/p2_generation` are copied unchanged from Replay `541180fd`. Stream P5 of cogno-us/cognous-control-plane#43.
