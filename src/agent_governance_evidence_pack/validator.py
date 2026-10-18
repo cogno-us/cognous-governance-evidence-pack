@@ -18,11 +18,12 @@ from .models import (
 )
 
 
-# Fields a human reviewer may legitimately add to or change after import. Every other member of an imported pack must equal
-# the fresh reconstruction from the retained sources; ``metadata`` is compared through ``traceable_import`` above, and its
-# other keys are free extension space.
+# Fields that may differ from the fresh reconstruction. A human reviewer adds or changes the review overlay after import;
+# ``title`` is the caller's presentation label (the importer takes it as an argument and does not retain it, so it cannot be
+# re-derived; the renderers escape it). Every other member of an imported pack must equal the fresh reconstruction;
+# ``metadata`` is compared through ``traceable_import`` below and its other keys are free extension space.
 REVIEW_OVERLAY_FIELDS = frozenset({
-    "review_status", "review_records", "risk_register", "blocked_actions", "reliance_summary", "redaction_exports",
+    "title", "review_status", "review_records", "risk_register", "blocked_actions", "reliance_summary", "redaction_exports",
 })
 
 
@@ -488,13 +489,8 @@ def validate_evidence_pack(pack: EvidencePack) -> ValidationReport:
             if not isinstance(trace, dict):
                 raise ValueError("trace metadata must be an object")
             sources = trace["retained_sources"]
-            # A caller-supplied title is retained in the trace (import_parameters) so the title is compared like every other member;
-            # without one the importer's default title is expected.
-            params = trace.get("import_parameters")
-            if params is not None and (not isinstance(params, dict) or not isinstance(params.get("title"), str)):
-                raise ValueError("trace import parameters are malformed")
             expected = import_manifest_reconstruction(sources["manifest"], sources["reconstruction_bundle"],
-                title=params["title"] if params else None, generated_at=pack.generated_at)
+                title=pack.title, generated_at=pack.generated_at)
             if trace != expected.metadata["traceable_import"]:
                 raise ValueError("traceable transformation differs from retained source reconstruction")
             actual_dump, expected_dump = pack.model_dump(mode="json"), expected.model_dump(mode="json")

@@ -49,7 +49,6 @@ def test_unedited_imported_pack_is_valid(traced):
     ("tool_inventory", lambda d: d["tool_inventory"][0].__setitem__("tool_name", "renamed_tool")),
     ("tool_inventory_added", lambda d: d["tool_inventory"].append(copy.deepcopy(d["tool_inventory"][0]) | {"tool_name": "extra"})),
     ("generated_at", lambda d: d.__setitem__("generated_at", "2030-01-01T00:00:00+00:00")),
-    ("title", lambda d: d.__setitem__("title", "A different title")),
     ("environment", lambda d: d["deployment_context"].__setitem__("environment", "production")),
     ("systems_touched", lambda d: d["deployment_context"]["systems_touched"].append("another-system")),
 ])
@@ -62,9 +61,10 @@ def test_editing_an_imported_member_is_refused(traced, name, edit):
 def test_review_overlay_fields_stay_editable(traced):
     dump = copy.deepcopy(traced)
     dump["review_status"] = "in_review"
+    dump["title"] = "A caller-chosen presentation title"
     dump["metadata"]["reviewer_note"] = "free extension space"
     assert "E_TRACE_SEMANTICS" not in _errors(dump)
-    assert REVIEW_OVERLAY_FIELDS == {"review_status", "review_records", "risk_register", "blocked_actions", "reliance_summary", "redaction_exports"}
+    assert REVIEW_OVERLAY_FIELDS == {"title", "review_status", "review_records", "risk_register", "blocked_actions", "reliance_summary", "redaction_exports"}
 
 
 
