@@ -731,7 +731,7 @@ def _installed_replay_revision() -> str | None:
     """Commit the installed ``agent-replay-bundle`` distribution was installed from, or None when it cannot be established.
 
     A VCS install records its commit (PEP 610 ``direct_url.json``). A local-directory (for example editable) install is
-    accepted only when that directory is a git checkout with no modification to tracked files; its HEAD is the revision.
+    accepted only when that directory is a git checkout with no modification to tracked source files; its HEAD is the revision.
     """
     import importlib.metadata as metadata
     import subprocess
@@ -747,7 +747,8 @@ def _installed_replay_revision() -> str | None:
             root = unquote(url.path)
             def git(*args: str) -> str:
                 return subprocess.run(["git", "-C", root, *args], check=True, capture_output=True, text=True, timeout=30).stdout.strip()
-            if git("status", "--porcelain", "--untracked-files=no"):
+            # Installing rewrites tracked ``*.egg-info`` metadata in older checkouts; that is not source modification.
+            if any(".egg-info/" not in line for line in git("status", "--porcelain", "--untracked-files=no").splitlines()):
                 return None
             head = git("rev-parse", "HEAD")
             return head if re.fullmatch(r"[0-9a-f]{40}", head) else None

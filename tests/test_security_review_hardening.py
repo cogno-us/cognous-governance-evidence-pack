@@ -329,3 +329,18 @@ def test_vcs_install_reports_its_recorded_commit(monkeypatch):
 def test_install_without_provenance_is_not_trusted(monkeypatch):
     _fake_distribution(monkeypatch, {"url": "https://example.invalid/wheel.whl", "archive_info": {}})
     assert imp._installed_replay_revision() is None
+
+
+@pytest.mark.real_distribution_check
+def test_rewritten_egg_info_does_not_count_as_a_modification(monkeypatch, tmp_path):
+    import subprocess
+    root, head = _checkout(tmp_path)
+    info = root / "pkg.egg-info"
+    info.mkdir()
+    (info / "PKG-INFO").write_text("a\n")
+    subprocess.run(["git", "-C", str(root), "add", "-f", "pkg.egg-info"], check=True)
+    subprocess.run(["git", "-C", str(root), "-c", "user.email=t@example.invalid", "-c", "user.name=t", "commit", "-q", "-m", "m"], check=True)
+    head = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
+    (info / "PKG-INFO").write_text("b\n")
+    _fake_distribution(monkeypatch, {"url": root.as_uri(), "dir_info": {"editable": True}})
+    assert imp._installed_replay_revision() == head
