@@ -87,11 +87,12 @@ def test_unrecorded_module_in_the_package_is_refused(tmp_path):
     assert _run(tmp_path, real)["refused"] is True
 
 
-def test_package_without_distribution_metadata_is_unchanged(tmp_path):
-    # Control: no distribution named agent-replay-bundle, so there is nothing to bind the code to; the existing
-    # behaviour (the caller's selection is not authenticated) is kept.
-    bare = tmp_path / "bare"
-    (bare / "agent_replay_bundle").mkdir(parents=True)
+def test_editable_install_with_code_inside_its_directory_is_unchanged(tmp_path):
+    # Control: an editable install imported from the directory its metadata names is not refused by the code check.
+    root = tmp_path / "checkout"
+    (root / "agent_replay_bundle").mkdir(parents=True)
     for rel, text in REPLAY_FILES.items():
-        (bare / "agent_replay_bundle" / rel).write_text(text)
-    assert _run(tmp_path, bare)["refused"] is False
+        (root / "agent_replay_bundle" / rel).write_text(text)
+    meta = _site(tmp_path, "meta", {"__init__.py": "X = 1\n"}, dir_url=root.as_uri())
+    # the metadata names `root`; the code is imported from `root`, which comes first on the path
+    assert _run(tmp_path, root, meta)["refused"] is False
