@@ -749,10 +749,12 @@ def _checkout_head(root: str) -> str | None:
 
 
 def _installed_replay_revision() -> str | None:
-    """Commit the importable ``agent_replay_bundle`` code comes from, or None when it cannot be established.
+    """Revision recorded by the installed ``agent-replay-bundle`` distribution (or checkout), or None when it cannot be established.
 
     A VCS install records its commit (PEP 610 ``direct_url.json``). A local-directory install, or code imported from a
     checkout, is accepted only when that git checkout has no modified tracked source file; its HEAD is the revision.
+    This reads the distribution's metadata; it does not by itself show that the imported module came from that distribution
+    (``_imported_replay_code_problem`` is the separate check that compares the imported files with the distribution's RECORD).
     """
     import importlib.metadata as metadata
     import importlib.util

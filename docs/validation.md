@@ -32,6 +32,12 @@ print(report.issues)  # list of ValidationIssue
 
 ---
 
+## What a valid result means
+
+A valid result establishes the integrity and internal consistency of the record. It does not establish that the recorded decision was the correct one, and no check described here evaluates whether an action was permitted.
+
+---
+
 ## Error Rules
 
 Errors cause `valid=False`.
@@ -52,12 +58,14 @@ Errors cause `valid=False`.
 | E012 | `risk_register` risk_id values must be unique. |
 | E013 | `replay_bundles` bundle_id values must be unique. |
 | E014 | `redaction_exports` export_id values must be unique. |
-| E015 | `review_status` "approved" or "approved_with_conditions" requires at least one `ReviewRecord`. |
+| E015 | `review_status` "approved" or "approved_with_conditions" requires at least one `ReviewRecord` whose decision equals the status and that has a non-empty `reviewer` and `reviewed_at`. |
 | E016 | `ReviewRecord` decision "approved" or "approved_with_conditions" requires `reviewed_at`. |
 | E017 | A critical open risk prevents approval: if `review_status` is "approved" and a risk is critical and open, this is an error. |
 | E018 | An action with `authority_required=True` requires `authority_model` to be present. |
 | E019 | An action with `review_required=True` requires at least one policy control that mentions review or approval. |
 | E020 | `review_status` "approved" with an empty `replay_bundles` list is an error. |
+| E_BUDGET | Trace metadata exceeds the admission budget. |
+| E_TRACE_SEMANTICS | An imported pack (`pack_id` starting `agep-` or `pack_version` 0.2.0) carries no `metadata.traceable_import`, or the retained sources fail the pinned Replay semantic validation or comparison. This and `E_BUDGET` are the checks that bind an imported pack to its sources; they are reported only for imports. |
 
 ---
 
@@ -84,8 +92,8 @@ Warnings do not affect validity. They flag gaps that may need attention.
 | W015 | Production deployment with `review_status` "draft" or "in_review". |
 | W016 | Production deployment with no redaction exports. |
 | W017 | Production deployment with no signed replay bundles. |
-| W018 | Action of type `external_send`, `delete`, `purchase`, or `approve` without `review_required=True`. |
-| W019 | Action of type `external_send`, `delete`, `purchase`, or `approve` without `authority_required=True`. |
+| W018 | Action of type `external_send`, `write`, `delete`, `export`, `purchase`, or `approve` without `review_required=True`. |
+| W019 | Action of type `external_send`, `write`, `delete`, `export`, `purchase`, or `approve` without `authority_required=True`. |
 | W020 | Tool with `external_system` set but `data_classification` missing. |
 
 ---
