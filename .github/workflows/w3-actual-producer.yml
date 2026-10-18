@@ -11,9 +11,9 @@ permissions:
   contents: read
 jobs:
   cross-component:
-    uses: cogno-us/cognous-stack-qualification/.github/workflows/cognous-governance-evidence-pack--w3-actual-producer.yml@39f038435afdd71ba162860faa5718d90d7bde64
+    uses: cogno-us/cognous-stack-qualification/.github/workflows/cognous-governance-evidence-pack--w3-actual-producer.yml@2adc1103dddfa54fde52f44dec0d7e7901fb710e
     with:
       source_revision: ${{ github.event.pull_request.head.sha || github.sha }}
-      qualification_revision: 39f038435afdd71ba162860faa5718d90d7bde64
+      qualification_revision: 2adc1103dddfa54fde52f44dec0d7e7901fb710e
     permissions:
       contents: read
