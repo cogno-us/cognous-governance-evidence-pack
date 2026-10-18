@@ -1,4 +1,4 @@
-"""Programme-2 producer generation: Control Plane 3755c71a, runtime fc034d14, Replay 3c056cf8, Manifest 2c36bcd0.
+"""Programme-2 producer generation: Control Plane 3755c71a, runtime 7170da59, Replay 541180fd, Manifest 2c36bcd0.
 
 Added beside P4, exactly paired, never mixed with an earlier generation. The stub cases replace only the Replay constant module
 (as test_p4_generation), so they run without Replay installed. The end-to-end cases run real Replay output (inputs under
@@ -22,10 +22,12 @@ from tests.test_p4_generation import P4, p4_replay  # noqa: F401
 
 FIX = Path(__file__).parent / "fixtures" / "p2_generation"
 P2 = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
-      "replay": "3c056cf82cbb6dade7b651901bb9e73391fd60dd",
+      "replay": "541180fde891a3048b8a61e77518f3311917e00b",
       "control_plane": "3755c71a20eab1a41135967b682342c809929572",
-      "moltbot_safe": "fc034d140ce55d9887ac3a0aab598f3a2c05ea47"}
+      "moltbot_safe": "7170da59e04854a3dbe13f151400d0ac368b8dcb"}
 P2_CP_PROFILE = "control-plane-programme2-profiles@3755c71a"
+# P5: the executor pairing moved from this runtime to 7170da59; the earlier pairing is replaced, not kept.
+PREVIOUS_P2_RUNTIME = "fc034d140ce55d9887ac3a0aab598f3a2c05ea47"
 
 
 @pytest.fixture
@@ -87,6 +89,14 @@ def test_p2_cross_generation_pairs_rejected(p2_replay, cp, executor):
         imp._validate_headers(MANIFEST, p2_bundle(cp, executor))
 
 
+def test_p2_previous_runtime_pairing_is_replaced_not_kept(p2_replay):
+    """P5: fc034d14 is no longer a pinned runtime revision at all."""
+    assert PREVIOUS_P2_RUNTIME not in imp.P2_REVISIONS.values()
+    assert all(PREVIOUS_P2_RUNTIME not in revisions for revisions in imp.REQUIRED_REPOS.values())
+    with pytest.raises(ImportContractError):
+        imp._validate_headers(MANIFEST, p2_bundle(executor=PREVIOUS_P2_RUNTIME))
+
+
 def test_p2_manifest_of_another_generation_is_rejected(p2_replay):
     with pytest.raises(ImportContractError, match="not paired"):
         imp._validate_headers(MANIFEST, p2_bundle(manifest_revision=OLD["manifest"]))
@@ -122,7 +132,7 @@ def test_earlier_generations_do_not_require_the_p2_mapping(p2_replay):
 
 def test_executor_profile_identity_is_the_replay_profile_of_the_pinned_runtime(p2_replay):
     bundle = p2_bundle()
-    assert bundle["producer_profiles"][1]["profile_id"] == "moltbot-safe-executor-producer-2.0.0@fc034d14"
+    assert bundle["producer_profiles"][1]["profile_id"] == "moltbot-safe-executor-producer-2.0.0@7170da59"
     bundle["producer_profiles"][1]["profile_id"] = "moltbot-safe-executor-producer-2.0.0@3024ef6e"
     with pytest.raises(ImportContractError, match="requires accepted Replay producer profile identity"):
         imp._validate_headers(MANIFEST, bundle)
@@ -198,7 +208,7 @@ def test_a_default_run_of_the_generation_adds_nothing_to_the_pack():
     assert not kinds & {"operation", "merge_record", "snapshot_use", "dedupe_escalation", "rule_revision", "recovery_run"}
 
 
-@pytest.mark.parametrize("revision", [P4["moltbot_safe"], F5B["moltbot_safe"]])
+@pytest.mark.parametrize("revision", [P4["moltbot_safe"], F5B["moltbot_safe"], PREVIOUS_P2_RUNTIME])
 def test_a_real_p2_bundle_with_an_earlier_executor_revision_is_refused(revision):
     replay_module = _real_replay()
     bundle = copy.deepcopy(_paired(replay_module, "adapter-default"))
