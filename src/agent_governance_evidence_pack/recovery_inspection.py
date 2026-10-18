@@ -42,6 +42,10 @@ def build_recovery_inspection_evidence(inspection, *, replay_revision, expected_
         from agent_replay_bundle.recovery_inspection import (
             INSPECTION_FORMAT, validate_recovery_inspection,
         )
+        # The imported code must be the code of the installed distribution (same check as the pinned Replay import).
+        from .importer import _imported_replay_code_problem
+        problem = _imported_replay_code_problem()
+        _require(problem is None, f"imported Replay code is not the code of the installed distribution: {problem}")
         _require(INSPECTION_FORMAT == REPLAY_FORMAT, "installed Replay API is unsupported")
         validate_recovery_inspection(retained)
         _require(retained["assurance"]["settlement_verified"] is False
