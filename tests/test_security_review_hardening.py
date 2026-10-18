@@ -277,3 +277,55 @@ def test_c8_complete_status_needs_a_complete_report():
     s["status"] = "reconstruction_complete"
     with pytest.raises(C8EvidenceError, match="completeness"):
         project_c8_lineage(s)
+
+
+# ---------------------------------------------------------------- local-checkout installs
+def _fake_distribution(monkeypatch, direct_url):
+    import importlib.metadata as metadata
+
+    class Dist:
+        def read_text(self, name):
+            return json.dumps(direct_url) if name == "direct_url.json" else None
+
+    monkeypatch.setattr(metadata, "distribution", lambda name: Dist())
+
+
+def _checkout(tmp_path):
+    import subprocess
+    root = tmp_path / "replay"
+    root.mkdir()
+    run = lambda *a: subprocess.run(["git", "-C", str(root), *a], check=True, capture_output=True, text=True).stdout.strip()  # noqa: E731
+    run("init", "-q")
+    run("config", "user.email", "t@example.invalid")
+    run("config", "user.name", "t")
+    (root / "m.py").write_text("x = 1\n")
+    run("add", "m.py")
+    run("commit", "-q", "-m", "c")
+    return root, run("rev-parse", "HEAD")
+
+
+@pytest.mark.real_distribution_check
+def test_clean_local_checkout_install_reports_its_head(monkeypatch, tmp_path):
+    root, head = _checkout(tmp_path)
+    _fake_distribution(monkeypatch, {"url": root.as_uri(), "dir_info": {"editable": True}})
+    assert imp._installed_replay_revision() == head
+
+
+@pytest.mark.real_distribution_check
+def test_modified_local_checkout_install_is_not_trusted(monkeypatch, tmp_path):
+    root, _ = _checkout(tmp_path)
+    (root / "m.py").write_text("x = 2\n")
+    _fake_distribution(monkeypatch, {"url": root.as_uri(), "dir_info": {"editable": True}})
+    assert imp._installed_replay_revision() is None
+
+
+@pytest.mark.real_distribution_check
+def test_vcs_install_reports_its_recorded_commit(monkeypatch):
+    _fake_distribution(monkeypatch, {"url": "https://example.invalid/r", "vcs_info": {"vcs": "git", "commit_id": "a" * 40}})
+    assert imp._installed_replay_revision() == "a" * 40
+
+
+@pytest.mark.real_distribution_check
+def test_install_without_provenance_is_not_trusted(monkeypatch):
+    _fake_distribution(monkeypatch, {"url": "https://example.invalid/wheel.whl", "archive_info": {}})
+    assert imp._installed_replay_revision() is None

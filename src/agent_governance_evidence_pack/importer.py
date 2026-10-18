@@ -728,14 +728,32 @@ def _expected_replay_revision(bundle: dict[str, Any]) -> str:
 
 
 def _installed_replay_revision() -> str | None:
-    """Commit the installed ``agent-replay-bundle`` distribution was installed from (PEP 610 ``direct_url.json``), or None."""
+    """Commit the installed ``agent-replay-bundle`` distribution was installed from, or None when it cannot be established.
+
+    A VCS install records its commit (PEP 610 ``direct_url.json``). A local-directory (for example editable) install is
+    accepted only when that directory is a git checkout with no modification to tracked files; its HEAD is the revision.
+    """
     import importlib.metadata as metadata
+    import subprocess
+    from urllib.parse import unquote, urlparse
     try:
         raw = metadata.distribution("agent-replay-bundle").read_text("direct_url.json")
-        commit = ((json.loads(raw) if raw else {}).get("vcs_info") or {}).get("commit_id")
+        info = json.loads(raw) if raw else {}
+        commit = (info.get("vcs_info") or {}).get("commit_id")
+        if isinstance(commit, str):
+            return commit
+        url = urlparse(str(info.get("url", "")))
+        if "dir_info" in info and url.scheme == "file":
+            root = unquote(url.path)
+            def git(*args: str) -> str:
+                return subprocess.run(["git", "-C", root, *args], check=True, capture_output=True, text=True, timeout=30).stdout.strip()
+            if git("status", "--porcelain", "--untracked-files=no"):
+                return None
+            head = git("rev-parse", "HEAD")
+            return head if re.fullmatch(r"[0-9a-f]{40}", head) else None
     except Exception:
         return None
-    return commit if isinstance(commit, str) else None
+    return None
 
 
 def _require_pinned_replay_distribution(expected: str) -> None:
