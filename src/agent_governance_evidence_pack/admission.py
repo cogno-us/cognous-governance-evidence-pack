@@ -1,8 +1,20 @@
 """Byte and syntax budgets for local artifact admission; never grants authority."""
 import json
+import math
 from pathlib import Path
 
 MAX_JSON_BYTES = 8 * 1024 * 1024
+
+# Codes match the control plane strict loader family.
+INPUT_NON_FINITE_NUMBER = 'input_json_non_finite_number'
+INPUT_NOT_UTF8 = 'input_not_utf8'
+
+
+def _refuse_surrogate(text):
+    try:
+        text.encode('utf-8')
+    except UnicodeEncodeError:
+        raise ValueError(f'[{INPUT_NOT_UTF8}] text contains a lone surrogate') from None
 
 
 def read_bytes(path, limit=MAX_JSON_BYTES):
@@ -45,8 +57,29 @@ def loads(value, limit=MAX_JSON_BYTES):
             result[key] = item
         return result
     def constant(value):
-        raise ValueError('nonfinite JSON value')
-    return json.loads(value, object_pairs_hook=pairs, parse_constant=constant)
+        raise ValueError(f'[{INPUT_NON_FINITE_NUMBER}] nonfinite JSON value')
+    def number(text):
+        result = float(text)
+        if not math.isfinite(result):
+            raise ValueError(f'[{INPUT_NON_FINITE_NUMBER}] number out of range')
+        return result
+    parsed = json.loads(value, object_pairs_hook=pairs, parse_constant=constant, parse_float=number)
+    _scan_text(parsed)
+    return parsed
+
+
+def _scan_text(value):
+    stack = [value]
+    while stack:
+        item = stack.pop()
+        if type(item) is str:
+            _refuse_surrogate(item)
+        elif type(item) is dict:
+            for key, child in item.items():
+                _refuse_surrogate(key)
+                stack.append(child)
+        elif type(item) is list:
+            stack.extend(item)
 
 
 def admit_value(value):
@@ -57,9 +90,12 @@ def admit_value(value):
         nodes += 1
         if nodes > 100000 or depth > 32:
             raise ValueError('evidence structural budget exceeded')
+        if type(item) is float and not math.isfinite(item):
+            raise ValueError(f'[{INPUT_NON_FINITE_NUMBER}] nonfinite evidence number')
         if type(item) is str:
             if len(item) > 1048576:
                 raise ValueError('evidence string budget exceeded')
+            _refuse_surrogate(item)
             size += len(item.encode('utf-8'))
         elif type(item) is dict:
             if len(item) > 4096:
