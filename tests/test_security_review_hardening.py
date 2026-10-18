@@ -326,8 +326,12 @@ def test_vcs_install_reports_its_recorded_commit(monkeypatch):
 
 
 @pytest.mark.real_distribution_check
-def test_install_without_provenance_is_not_trusted(monkeypatch):
+def test_install_without_provenance_is_not_trusted(monkeypatch, tmp_path):
+    import importlib.util
+    import types
+    (tmp_path / "m.py").write_text("x = 1\n")
     _fake_distribution(monkeypatch, {"url": "https://example.invalid/wheel.whl", "archive_info": {}})
+    monkeypatch.setattr(importlib.util, "find_spec", lambda name: types.SimpleNamespace(origin=str(tmp_path / "m.py")))
     assert imp._installed_replay_revision() is None
 
 
