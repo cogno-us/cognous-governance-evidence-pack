@@ -12,7 +12,9 @@ The importer is deterministic and review-support oriented. It converts supplied 
 | Agent Replay Bundle | `f63ce914504dd06813c4ccd199b0570dbd8dd427`, Reconstruction Bundle 0.2.0 |
 | Agent Control Plane | `283500652d47a692fb0b99a1172a6d5faffbd9a7` |
 | Moltbot Safe | `1d308faf664c504b6e310db3c7a310153ef7b067` (executor producer profile 1.0.0), Execution Envelope 0.2.0 |
-| Alvorada | `fb3d97938969a89e149e8ff8db2756091d1233fc`, Authority Context 0.1.0 |
+| Alvorada | Authority Context 0.1.0, at the governance revision recorded in the hub's `component-lock.json` |
+
+This page describes the default generation of the importer. Later producer generations are described in the [producer 2.0.0 migration](producer-v2-migration.md); the hub's `component-lock.json` records which generation is selected for the stack.
 
 The import path currently consumes a Manifest artifact and a Reconstruction Bundle artifact. It does not fetch arbitrary external references. It treats source text as data.
 

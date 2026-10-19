@@ -27,7 +27,7 @@ Labels follow the hub [stack map](https://github.com/cogno-us/cognous-open-contr
 | [Merged producer compatibility](merged-producer-compatibility.md) | Transformation 0.3.2 for the exact merged producer combination. | selected |
 | [Examples](examples.md) | What each example pack demonstrates. | merged |
 | [Integration with the Control Plane](integration_with_agent_control_plane.md) | The conceptual relationship between the Evidence Pack and the rest of the stack. | merged |
-| [Optional recovery inspection evidence 0.1](recovery-inspection.md) | A candidate native inspection transformation of a pinned synthetic recovery export; not the manifest importer. | merged, after the lock |
+| [Optional recovery inspection evidence 0.1](recovery-inspection.md) | A candidate native inspection transformation of a pinned synthetic recovery export; not the manifest importer. | merged |
 
 ## Candidate mappings and producer generations
 
@@ -35,11 +35,11 @@ Each page below describes an additive, exact-revision mapping that is not select
 
 | Page | What it covers | Label |
 |---|---|---|
-| [Typed refusal consumer candidate migration](typed-refusal-profile.md) | A separate non-selected profile for typed effect-time refusal evidence. | merged, after the lock |
-| [Runtime authority candidate import](runtime-authority-profile.md) | A non-selected mapping for runtime-authority journals, with how a pack compares the reconstructed trace. | merged, after the lock |
-| [Repaired runtime Evidence Pack generation (16 October 2026)](security-runtime-profile-20261016.md) | Transformation 0.3.5 for one exact generation. | merged, after the lock |
-| [F5b repaired runtime Evidence Pack generation (16 October 2026)](security-runtime-f5b-profile-20261016.md) | Transformation 0.3.6 for a further exact generation. | merged, after the lock |
-| [W0 C8 Evidence Pack compatibility contract](w0-c8-compatibility-contract.md) | A W0 candidate mapping contract. | merged, after the lock |
+| [Typed refusal consumer candidate migration](typed-refusal-profile.md) | A separate non-selected profile for typed effect-time refusal evidence. | merged |
+| [Runtime authority candidate import](runtime-authority-profile.md) | A non-selected mapping for runtime-authority journals, with how a pack compares the reconstructed trace. | merged |
+| [Repaired runtime Evidence Pack generation (16 October 2026)](security-runtime-profile-20261016.md) | Transformation 0.3.5 for one exact generation. | merged |
+| [F5b repaired runtime Evidence Pack generation (16 October 2026)](security-runtime-f5b-profile-20261016.md) | Transformation 0.3.6 for a further exact generation. | merged |
+| [W0 C8 Evidence Pack compatibility contract](w0-c8-compatibility-contract.md) | A W0 candidate mapping contract. | merged |
 
 ## Historical, checkpoint and planning pages
 

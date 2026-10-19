@@ -98,8 +98,6 @@ agep validate traceable.json
 agep summarize traceable.json
 ```
 
-<!-- pin-round: the two revisions above are the ones traceable_imports.md documents; the lock pins this repository at b4baccd823d2. Refresh with the docs gate. -->
-
 These commands create `upstream/`, `traceable.json` and `traceable.md` inside the checkout; delete them when you are done. Expected output, with exit code 0 for each command:
 
 ```text
@@ -133,7 +131,7 @@ This is the component-local suite that the `native` job of the Tests workflow ru
 
 ## What ships
 
-Status labels: **merged** = merged in this repository; **selected** = pinned in the hub lock; **known limit**; **proposed**. See the [stack map](https://github.com/cogno-us/cognous-open-control-stack/blob/main/docs/stack-map.md#status-labels). A newer commit here is not selected until the hub lock changes. Items marked "after the lock" are not in the revision the lock pins.
+Status labels: **merged** = merged in this repository; **selected** = pinned in the hub lock; **known limit**; **proposed**. See the [stack map](https://github.com/cogno-us/cognous-open-control-stack/blob/main/docs/stack-map.md#status-labels). A newer commit here is not selected until the hub lock changes.
 
 ### Command-line tool `agep`
 
@@ -152,11 +150,11 @@ Status labels: **merged** = merged in this repository; **selected** = pinned in 
 | Evidence Pack 0.1 | The hand-authored pack shape. Its review, signature, redaction and validation fields are caller assertions. | merged | [format](docs/evidence_pack_format.md), [validation](docs/validation.md) |
 | Imported Evidence Pack 0.2.0 | The traceable imported pack, with trace metadata, retained sources, loss register and lifecycle summary. | selected | [traceable imports](docs/traceable_imports.md), [migration](docs/migration_v0_2_0.md) |
 | Transformation 0.3.2 | The selected manifest/reconstruction transformation, for the merged producer pair. | selected | [merged producer compatibility](docs/merged-producer-compatibility.md) |
-| Transformations 0.2.6 to 0.3.8 | Distinct compatibility mappings for exact producer generations, including the Programme-2 generation. Earlier ones are retained historical mappings; later ones are not selected. | merged; later generations after the lock | [producer 2.0.0](docs/producer-v2-migration.md), [persistence checkpoint](docs/workstreams/evidence-pack-control-plane-store-checkpoint.md), [producer 2.0.0 checkpoint](docs/workstreams/evidence-pack-producer-v2-checkpoint.md) |
-| Typed refusal, runtime authority and repaired-runtime profiles | Separate, non-selected, additive mappings for exact revisions. | merged, after the lock | [typed refusal](docs/typed-refusal-profile.md), [runtime authority](docs/runtime-authority-profile.md), [repaired runtime](docs/security-runtime-profile-20261016.md), [F5b](docs/security-runtime-f5b-profile-20261016.md) |
-| Optional freshness block | Opt-in counts derived from the retained journal; exists only when the run record carries freshness members. Not an independent monitor. | merged, after the lock | [CHANGELOG](CHANGELOG.md) |
-| Recovery inspection evidence 0.1 | Optional native inspection transformation of a pinned synthetic recovery export; not the manifest importer. | merged, after the lock | [recovery inspection](docs/recovery-inspection.md) |
-| W0 C8 compatibility contract | A W0 candidate mapping contract. | merged, after the lock | [contract](docs/w0-c8-compatibility-contract.md) |
+| Transformations 0.2.6 to 0.3.8 | Distinct compatibility mappings for exact producer generations, including the Programme-2 generation. Earlier ones are retained historical mappings; the selected one is set by the hub lock. | merged | [producer 2.0.0](docs/producer-v2-migration.md), [persistence checkpoint](docs/workstreams/evidence-pack-control-plane-store-checkpoint.md), [producer 2.0.0 checkpoint](docs/workstreams/evidence-pack-producer-v2-checkpoint.md) |
+| Typed refusal, runtime authority and repaired-runtime profiles | Separate, non-selected, additive mappings for exact revisions. | merged | [typed refusal](docs/typed-refusal-profile.md), [runtime authority](docs/runtime-authority-profile.md), [repaired runtime](docs/security-runtime-profile-20261016.md), [F5b](docs/security-runtime-f5b-profile-20261016.md) |
+| Optional freshness block | Opt-in counts derived from the retained journal; exists only when the run record carries freshness members. Not an independent monitor. | merged | [CHANGELOG](CHANGELOG.md) |
+| Recovery inspection evidence 0.1 | Optional native inspection transformation of a pinned synthetic recovery export; not the manifest importer. | merged | [recovery inspection](docs/recovery-inspection.md) |
+| W0 C8 compatibility contract | A W0 candidate mapping contract. | merged | [contract](docs/w0-c8-compatibility-contract.md) |
 
 ### Python modules (`src/agent_governance_evidence_pack/`)
 
@@ -166,10 +164,10 @@ Status labels: **merged** = merged in this repository; **selected** = pinned in 
 | `renderer`, `trace_renderer` | Markdown rendering and the traceability addendum for imported packs. |
 | `importer` | Traceable import with pinned Replay semantic validation. |
 | `cli` | The `agep` entry point. |
-| `admission` | Byte and syntax budgets for reading input files. Merged after the lock. |
-| `freshness` | The optional freshness block. Merged after the lock. |
-| `recovery_inspection` | Optional recovery inspection evidence. Merged after the lock. |
-| `w3_atomic_evidence`, `w3_c8_lineage` | W3 atomic failure-history and C8 lineage projections (separate from the 0.2.0 schema; no authority inferred). Merged after the lock. |
+| `admission` | Byte and syntax budgets for reading input files. |
+| `freshness` | The optional freshness block. |
+| `recovery_inspection` | Optional recovery inspection evidence. |
+| `w3_atomic_evidence`, `w3_c8_lineage` | W3 atomic failure-history and C8 lineage projections (separate from the 0.2.0 schema; no authority inferred). |
 
 ### JSON schemas (`schemas/`)
 
@@ -217,8 +215,6 @@ Use the [current component lock](https://github.com/cogno-us/cognous-open-contro
 
 Transformations from **0.2.6** to **0.3.8** coexist as distinct compatibility mappings; the selected one is set by the hub's component lock, and an imported pack revalidates only in an environment with the Replay revision its generation pins (otherwise `agep validate` reports `E_TRACE_SEMANTICS`). Imported pack schema remains **0.2.0**. See the [persistence checkpoint](docs/workstreams/evidence-pack-control-plane-store-checkpoint.md); older migration notes describe their original generation.
 
-<!-- pin-round: the lock pin for governance_evidence_pack is b4baccd823d2; the "after the lock" labels in "What ships" and docs/README.md describe what main adds. Re-read them when the pin moves. -->
-
 Operational deployment trust is still [HOLD under orchestrator #30](https://github.com/cogno-us/cognous-stack-orchestrator/issues/30). No signature, evidence package, successful test or source merge creates a production grant, proves external settlement, or changes selected release authority. Test results and historical qualification records are read against their recorded source revisions.
 
 ## Where it fits: Cognous stack components
@@ -226,8 +222,8 @@ Operational deployment trust is still [HOLD under orchestrator #30](https://gith
 <a id="cognous-stack-components"></a>
 
 <!-- stack-map:start -->
-<!-- Canonical block: identical text in every component README. Source: docs/stack-map.md in the hub. Refresh at the pin round. -->
-The Open Control Stack groups its repositories by responsibility. The groups are a navigation map, not an execution sequence and not a requirement to install every component. The hub [component lock](https://github.com/cogno-us/cognous-open-control-stack/blob/main/component-lock.json) is the only source of selected revisions; [release status](https://github.com/cogno-us/cognous-open-control-stack/blob/main/docs/release-status.md) states their evidence and limits. Last checked against `component-lock.json` at hub commit `dcc9bd7533ef`.
+<!-- Canonical block: identical text in every component README. Source: docs/stack-map.md in the hub. -->
+The Open Control Stack groups its repositories by responsibility. The groups are a navigation map, not an execution sequence and not a requirement to install every component. The hub [component lock](https://github.com/cogno-us/cognous-open-control-stack/blob/main/component-lock.json) is the only source of selected revisions; [release status](https://github.com/cogno-us/cognous-open-control-stack/blob/main/docs/release-status.md) states their evidence and limits. The component revisions selected for the stack are listed in the hub's `component-lock.json`; this repository does not record which hub commit it was last checked against.
 
 | Group | Members |
 | --- | --- |
