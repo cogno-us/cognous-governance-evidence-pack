@@ -1,4 +1,4 @@
-"""Programme-2 producer generation: Control Plane 6093aca7, runtime 62a5cc15, Replay c8e665bd, Manifest f9ae8527.
+"""Programme-2 producer generation: Control Plane 2bac7875, runtime c4a05883, Replay 2a7963b1, Manifest ff549082.
 
 Added beside P4, exactly paired, never mixed with an earlier generation. The stub cases replace only the Replay constant module
 (as test_p4_generation), so they run without Replay installed. The end-to-end cases run real Replay output (inputs under
@@ -21,15 +21,15 @@ from tests.test_f5b_generation import F5B, MANIFEST, OLD, RUNTIME_AUTHORITY_EXEC
 from tests.test_p4_generation import P4, p4_replay  # noqa: F401
 
 FIX = Path(__file__).parent / "fixtures" / "p2_generation"
-P2 = {"manifest": "f9ae8527326c07e3177b5f003e626b23758be3d0",
-      "replay": "c8e665bd1936e4da90f6a324b486a320934c4bff",
-      "control_plane": "6093aca7b945698e89c0d8ac7c75306375e1a298",
-      "moltbot_safe": "62a5cc156ecb439b4103b757fd265f276bb30374"}
-P2_CP_PROFILE = "control-plane-programme2-profiles@6093aca7"
-# P5/P6/r9: the executor pairing moved from fc034d14 to 7170da59 to 11de097c to 62a5cc15; the earlier pairings are replaced, not kept.
-PREVIOUS_P2_RUNTIMES = ("fc034d140ce55d9887ac3a0aab598f3a2c05ea47", "7170da59e04854a3dbe13f151400d0ac368b8dcb", "11de097c450d3ad4d89f9add41b00e38e7cc2c7c")
-PREVIOUS_P2_CONTROL_PLANES = ("128eaa5e36fdff772fdc709581712dbeac046db3", "3755c71a20eab1a41135967b682342c809929572", "3cd17ead6b24301290ad1e50ae4b22bbd93c12fb")
-PREVIOUS_P2_REPLAYS = ("541180fde891a3048b8a61e77518f3311917e00b", "46e8bd7c263f5075cac3a7a9defcb265384f40e9")
+P2 = {"manifest": "ff5490828b2bf7f6a976da209f3f533701855687",
+      "replay": "2a7963b18d96eb2e9e4fdb1a09c7588cf5c0ef00",
+      "control_plane": "2bac7875391cad0a431fa0d75208b7ade39743e3",
+      "moltbot_safe": "c4a05883266b815f39d97cbf2240406647985147"}
+P2_CP_PROFILE = "control-plane-programme2-profiles@2bac7875"
+# P5/P6/r9: the executor pairing moved from fc034d14 to 7170da59 to 11de097c to 62a5cc15 to c4a05883; the earlier pairings are replaced, not kept.
+PREVIOUS_P2_RUNTIMES = ("fc034d140ce55d9887ac3a0aab598f3a2c05ea47", "7170da59e04854a3dbe13f151400d0ac368b8dcb", "11de097c450d3ad4d89f9add41b00e38e7cc2c7c", "62a5cc156ecb439b4103b757fd265f276bb30374")
+PREVIOUS_P2_CONTROL_PLANES = ("128eaa5e36fdff772fdc709581712dbeac046db3", "3755c71a20eab1a41135967b682342c809929572", "3cd17ead6b24301290ad1e50ae4b22bbd93c12fb", "6093aca7b945698e89c0d8ac7c75306375e1a298")
+PREVIOUS_P2_REPLAYS = ("541180fde891a3048b8a61e77518f3311917e00b", "46e8bd7c263f5075cac3a7a9defcb265384f40e9", "c8e665bd1936e4da90f6a324b486a320934c4bff")
 
 
 @pytest.fixture
@@ -65,7 +65,7 @@ def test_p2_generation_is_added_and_earlier_generations_are_unchanged():
     assert imp.P2_TRANSFORMATION_VERSION not in {imp.P4_TRANSFORMATION_VERSION, imp.F5B_TRANSFORMATION_VERSION, imp.SECURITY_TRANSFORMATION_VERSION}
     for key in ("replay", "control_plane", "moltbot_safe"):
         assert P2[key] != P4[key]
-    assert P2["manifest"] != P4["manifest"]  # the action manifest moved with the scan-fix stream (f9ae8527); P4 and F5b keep 2c36bcd0
+    assert P2["manifest"] != P4["manifest"]  # the action manifest moved with the scan-fix stream (ff549082); P4 and F5b keep 2c36bcd0
     assert "128eaa5e36fdff772fdc709581712dbeac046db3" not in imp.ALL_CONTROL_PLANE_V2_REVISIONS, "the earlier tie is not kept"
     assert {OLD["control_plane"], F5B["control_plane"], P4["control_plane"], P2["control_plane"]} <= set(imp.ALL_CONTROL_PLANE_V2_REVISIONS)
     for repo, key in [("cogno-us/cognous-agent-action-manifest", "manifest"), ("cogno-us/cognous-agent-replay-bundle", "replay"),
@@ -130,7 +130,7 @@ def test_p2_requires_exact_replay_mapping(p2_replay, override, message):
 
 def test_p2_profile_identity_must_match_the_replay_profile(p2_replay):
     bundle = p2_bundle()
-    bundle["producer_profiles"][0]["profile_id"] = bundle["records"][0]["producer_profile_id"] = "control-plane-security-runtime@6093aca7"
+    bundle["producer_profiles"][0]["profile_id"] = bundle["records"][0]["producer_profile_id"] = "control-plane-security-runtime@2bac7875"
     with pytest.raises(ImportContractError, match="contradicts accepted Replay revision/profile mapping"):
         imp._validate_headers(MANIFEST, bundle)
 
@@ -144,7 +144,7 @@ def test_earlier_generations_do_not_require_the_p2_mapping(p2_replay):
 
 def test_executor_profile_identity_is_the_replay_profile_of_the_pinned_runtime(p2_replay):
     bundle = p2_bundle()
-    assert bundle["producer_profiles"][1]["profile_id"] == "moltbot-safe-executor-producer-2.0.0@62a5cc15"
+    assert bundle["producer_profiles"][1]["profile_id"] == "moltbot-safe-executor-producer-2.0.0@c4a05883"
     bundle["producer_profiles"][1]["profile_id"] = "moltbot-safe-executor-producer-2.0.0@3024ef6e"
     with pytest.raises(ImportContractError, match="requires accepted Replay producer profile identity"):
         imp._validate_headers(MANIFEST, bundle)

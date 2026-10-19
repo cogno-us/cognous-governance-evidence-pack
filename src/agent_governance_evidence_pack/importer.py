@@ -91,13 +91,13 @@ P4_REVISIONS = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
     "control_plane": "26a7e6594eb535827ccc248cbca36a7d119d613b",
     "moltbot_safe": "3024ef6e6ecf7da22e5f4fdf90d873f93b2a55c9"}
 P4_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.7-security-runtime-p4-candidate"
-# Programme-2 generation (opt-in profiles): Control Plane 6093aca7 (3cd17ead plus the scan-fix stream; N1-N5, merge-record/reversibility/dedupe-ttl, registry labels
-# 0.1/0.2, strict JSON, terminal-revocation, strict instants), runtime 62a5cc15 (11de097c plus profile composition and producer export hardening), Replay c8e665bd (re-tied to these producers; accepts and retains that
-# generation's members), Manifest f9ae8527. Exactly paired like P4; the opt-in profile members only appear in a run that has them.
-P2_REVISIONS = {"manifest": "f9ae8527326c07e3177b5f003e626b23758be3d0",
-    "replay": "c8e665bd1936e4da90f6a324b486a320934c4bff",
-    "control_plane": "6093aca7b945698e89c0d8ac7c75306375e1a298",
-    "moltbot_safe": "62a5cc156ecb439b4103b757fd265f276bb30374"}
+# Programme-2 generation (opt-in profiles): Control Plane 2bac7875 (6093aca7 plus later changes; N1-N5, merge-record/reversibility/dedupe-ttl, registry labels
+# 0.1/0.2, strict JSON, terminal-revocation, strict instants), runtime c4a05883 (62a5cc15 plus later changes), Replay 2a7963b1 (re-tied to these producers; accepts and retains that
+# generation's members), Manifest ff549082. Exactly paired like P4; the opt-in profile members only appear in a run that has them.
+P2_REVISIONS = {"manifest": "ff5490828b2bf7f6a976da209f3f533701855687",
+    "replay": "2a7963b18d96eb2e9e4fdb1a09c7588cf5c0ef00",
+    "control_plane": "2bac7875391cad0a431fa0d75208b7ade39743e3",
+    "moltbot_safe": "c4a05883266b815f39d97cbf2240406647985147"}
 P2_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.8-programme2-profiles-candidate"
 SECURITY_RUNTIME_GENERATIONS = {
     SECURITY_REVISIONS["control_plane"]: (SECURITY_REVISIONS, SECURITY_TRANSFORMATION_VERSION),
