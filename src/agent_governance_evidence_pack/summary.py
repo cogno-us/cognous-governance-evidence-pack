@@ -4,7 +4,7 @@ Summary statistics for an Agent Governance Evidence Pack.
 
 from __future__ import annotations
 
-from .models import EvidencePack, RiskSeverity, RiskStatus, ValidationSeverity
+from .models import EvidencePack, RiskSeverity, RiskStatus
 
 
 def summarize_evidence_pack(pack: EvidencePack) -> dict:
