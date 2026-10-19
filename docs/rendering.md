@@ -41,7 +41,7 @@ The rendered document includes the following sections:
 agep render examples/customer_service_agent_evidence_pack.json --out /tmp/output.md
 ```
 
-If `--out` is omitted, the rendered markdown is printed to stdout.
+If `--out` is omitted, the rendered markdown is printed to stdout with each line break shown as the literal text `\u000a`, so use `--out` to get a readable file.
 
 ---
 
