@@ -39,6 +39,11 @@ def cmd_validate(args: list[str]) -> int:
     report = validate_evidence_pack(pack)
     print(f"Pack ID : {report.pack_id}")
     print(f"Valid   : {report.valid}")
+    if pack.metadata.get("traceable_import") is None:
+        print("Origin  : hand-authored (not an import); review status, signed, redacted and validation fields are "
+              "caller assertions, not verified")
+    else:
+        print("Origin  : import (metadata.traceable_import compared with its retained sources)")
     print(f"Issues  : {len(report.issues)}")
     for issue in report.issues:
         location = f" [{issue.path}]" if issue.path else ""
