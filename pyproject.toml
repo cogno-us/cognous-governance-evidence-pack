@@ -20,7 +20,7 @@ dependencies = [
 # set by the importer's pinned revision constants; the extra names the Programme-2 Replay revision in full, and the importer
 # refuses to emit a trusted-revision claim unless the installed distribution's recorded commit equals the pinned revision and the imported package files are files of that distribution (RECORD membership and recorded sha256).
 replay = [
-    "agent-replay-bundle @ git+https://github.com/cogno-us/cognous-replay-bundle@6a6a477495ac24e813f12bb0fe314acfe8bac9cf",
+    "agent-replay-bundle @ git+https://github.com/cogno-us/cognous-replay-bundle@d268b1ea864cfb9400fab334f1f72987cb1409bb",
 ]
 dev = [
     "pytest>=7.0",
