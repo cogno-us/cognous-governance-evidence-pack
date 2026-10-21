@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `agep validate` states the pack origin (2026-10-22, no contract change, version unchanged): a new `Origin` line says `hand-authored (not an import)` with a reminder that review status, `signed`, `redacted` and validation fields are caller assertions that are not verified, or `import` when the pack carries `metadata.traceable_import`. Validity, issues and exit codes are unchanged; the line is informational and is not a verdict.
+
 - Select the current runtime and Replay revisions in the Programme 2 tuple (no contract change, version unchanged): runtime `6b16962d` (was `c4a05883`) and Replay `6a6a4774` (was `2a7963b1`); Control Plane `2bac7875` and Manifest `ff549082` are unchanged. `P2_REVISIONS` is replaced in place, so bundles of the earlier tuple are refused as P2, and the `replay` extra names Replay `6a6a4774` in full. The paired P2 fixtures under `tests/fixtures/p2_generation` are re-copied unchanged from Replay `6a6a4774` (re-captured there at runtime `6b16962d`). No profile id, generation name or version string changed. No change to what the pack reads.
 
 - Move the Programme 2 source tuple to current mains (no contract change, version unchanged): Control Plane `2bac7875` (was `6093aca7`), runtime `c4a05883` (was `62a5cc15`), Replay `2a7963b1` (was `c8e665bd`) and Manifest `ff549082` (was `f9ae8527`); `P2_REVISIONS` is replaced in place, so bundles of the earlier tuple are refused as P2, and the `replay` extra names Replay `2a7963b1` in full. The P2 fixtures under `tests/fixtures/p2_generation` are re-copied unchanged from Replay `2a7963b1`. No change to what the pack reads.

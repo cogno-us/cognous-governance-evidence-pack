@@ -35,6 +35,16 @@ class TestValidateCommand:
         result = _run_agep_cmd("validate", str(VALID_EXAMPLE))
         assert result.returncode == 0
 
+    def test_hand_authored_pack_is_labelled_as_such(self):
+        result = _run_agep_cmd("validate", str(VALID_EXAMPLE))
+        assert "Origin  : hand-authored (not an import)" in result.stdout
+        assert "caller assertions, not verified" in result.stdout
+
+    def test_imported_pack_is_labelled_as_an_import(self):
+        result = _run_agep_cmd("validate", str(EXAMPLES_DIR / "producer-v2" / "lost_ack.pack.json"))
+        assert "Origin  : import (metadata.traceable_import" in result.stdout
+        assert "hand-authored" not in result.stdout
+
     def test_invalid_pack_returns_1(self, tmp_path):
         bad = {"pack_id": "", "title": "", "generated_at": "x"}
         bad["agent_overview"] = {"agent_name": "A", "business_purpose": "p"}

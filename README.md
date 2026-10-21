@@ -56,6 +56,7 @@ Expected output, with exit code 0 for each command:
 $ agep validate examples/customer_service_agent_evidence_pack.json
 Pack ID : ep-cs-agent-2026-001
 Valid   : True
+Origin  : hand-authored (not an import); review status, signed, redacted and validation fields are caller assertions, not verified
 Issues  : 1
   [WARNING] W014 [review_records]: review_records is empty.
 
@@ -105,6 +106,7 @@ Imported traceable evidence pack to traceable.json
 Rendered traceable evidence pack to traceable.md
 Pack ID : agep-dcacf65f1d59156a
 Valid   : True
+Origin  : import (metadata.traceable_import compared with its retained sources)
 Issues  : 7
   [WARNING] W002 [agent_overview.business_unit]: agent_overview.business_unit is missing.
   ...
