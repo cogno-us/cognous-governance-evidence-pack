@@ -91,13 +91,13 @@ P4_REVISIONS = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
     "control_plane": "26a7e6594eb535827ccc248cbca36a7d119d613b",
     "moltbot_safe": "3024ef6e6ecf7da22e5f4fdf90d873f93b2a55c9"}
 P4_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.7-security-runtime-p4-candidate"
-# Programme-2 generation (opt-in profiles): Control Plane 2bac7875 (6093aca7 plus later changes; N1-N5, merge-record/reversibility/dedupe-ttl, registry labels
-# 0.1/0.2, strict JSON, terminal-revocation, strict instants), runtime 6b16962d (c4a05883 plus later changes), Replay 6a6a4774 (re-tied to these producers; accepts and retains that
-# generation's members), Manifest ff549082. Exactly paired like P4; the opt-in profile members only appear in a run that has them.
-P2_REVISIONS = {"manifest": "ff5490828b2bf7f6a976da209f3f533701855687",
-    "replay": "6a6a477495ac24e813f12bb0fe314acfe8bac9cf",
-    "control_plane": "2bac7875391cad0a431fa0d75208b7ade39743e3",
-    "moltbot_safe": "6b16962db140590b808f02b5c2cb11a217aec46f"}
+# Programme-2 generation (opt-in profiles): Control Plane 5c474ba8 (2bac7875 plus later changes; N1-N5, merge-record/reversibility/dedupe-ttl, registry labels
+# 0.1/0.2, strict JSON, terminal-revocation, strict instants), runtime 79f39166 (6b16962d plus later changes), Replay d268b1ea (re-tied to these producers; accepts and retains that
+# generation's members), Manifest 8b016916. Exactly paired like P4; the opt-in profile members only appear in a run that has them.
+P2_REVISIONS = {"manifest": "8b0169169dfe792dee91257a7d5e9b585bb6206f",
+    "replay": "d268b1ea864cfb9400fab334f1f72987cb1409bb",
+    "control_plane": "5c474ba83a1477df93dec92d076f8e62b0a98ae1",
+    "moltbot_safe": "79f391662afd8b7f1034d201932231b49dd02ab9"}
 P2_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.8-programme2-profiles-candidate"
 SECURITY_RUNTIME_GENERATIONS = {
     SECURITY_REVISIONS["control_plane"]: (SECURITY_REVISIONS, SECURITY_TRANSFORMATION_VERSION),
