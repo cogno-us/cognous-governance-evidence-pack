@@ -91,12 +91,12 @@ P4_REVISIONS = {"manifest": "2c36bcd0b620dbfe7ad924bc7196a3f0c04c5c5e",
     "control_plane": "26a7e6594eb535827ccc248cbca36a7d119d613b",
     "moltbot_safe": "3024ef6e6ecf7da22e5f4fdf90d873f93b2a55c9"}
 P4_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.7-security-runtime-p4-candidate"
-# Programme-2 generation (opt-in profiles): Control Plane 0a41faa9 (e77fe0ee and 5c474ba8 plus later changes; N1-N5, merge-record/reversibility/dedupe-ttl, registry labels
-# 0.1/0.2, strict JSON, terminal-revocation, strict instants), runtime ec728da6 (cab4d9ab and 79f39166 plus later changes), Replay 028f63d1 (re-tied to these producers; accepts and retains that
+# Programme-2 generation (opt-in profiles): Control Plane 7a4bcd40 (0a41faa9, e77fe0ee and 5c474ba8 plus later changes; claim-journal repair, PR #83; N1-N5, merge-record/reversibility/dedupe-ttl, registry labels
+# 0.1/0.2, strict JSON, terminal-revocation, strict instants), runtime ec728da6 (cab4d9ab and 79f39166 plus later changes), Replay ab421ad0 (re-tied to these producers; failure_class on denied route-B exports; accepts and retains that
 # generation's members), Manifest fa170815. Exactly paired like P4; the opt-in profile members only appear in a run that has them.
 P2_REVISIONS = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
-    "replay": "028f63d1c001f99580583888fa4b4e46d77a267b",
-    "control_plane": "0a41faa972699f7ec3063967a14cd9bdd3e67d27",
+    "replay": "ab421ad0fdc6a24999273adf82455968953598ae",
+    "control_plane": "7a4bcd40b3b49e61ff3c294dcca53b52f460b22c",
     "moltbot_safe": "ec728da6dc301a664b331ac8986afd6e850a1273"}
 P2_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.8-programme2-profiles-candidate"
 SECURITY_RUNTIME_GENERATIONS = {
