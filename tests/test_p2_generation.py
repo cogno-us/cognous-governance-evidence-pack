@@ -1,4 +1,4 @@
-"""Programme-2 producer generation: Control Plane 7a4bcd40, runtime ec728da6, Replay ab421ad0, Manifest fa170815.
+"""Programme-2 producer generation: Control Plane 7a4bcd40, runtime c5e97e87, Replay 40012b8c (provisional development pin, UNQUALIFIED), Manifest fa170815.
 
 Added beside P4, exactly paired, never mixed with an earlier generation. The stub cases replace only the Replay constant module
 (as test_p4_generation), so they run without Replay installed. The end-to-end cases run real Replay output (inputs under
@@ -22,14 +22,14 @@ from tests.test_p4_generation import P4, p4_replay  # noqa: F401
 
 FIX = Path(__file__).parent / "fixtures" / "p2_generation"
 P2 = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
-      "replay": "ab421ad0fdc6a24999273adf82455968953598ae",
+      "replay": "40012b8c174c6f25685bd5d9bc93ff46cc9a5842",
       "control_plane": "7a4bcd40b3b49e61ff3c294dcca53b52f460b22c",
-      "moltbot_safe": "ec728da6dc301a664b331ac8986afd6e850a1273"}
+      "moltbot_safe": "c5e97e87dd239c821b1b4a406a55dcd03c5bc61f"}
 P2_CP_PROFILE = "control-plane-programme2-profiles@7a4bcd40"
-# P5/P6/r9: the executor pairing moved from fc034d14 to 7170da59 to 11de097c to 62a5cc15 to c4a05883 to 6b16962d to 79f39166 to cab4d9ab to ec728da6; the earlier pairings are replaced, not kept.
-PREVIOUS_P2_RUNTIMES = ("fc034d140ce55d9887ac3a0aab598f3a2c05ea47", "7170da59e04854a3dbe13f151400d0ac368b8dcb", "11de097c450d3ad4d89f9add41b00e38e7cc2c7c", "62a5cc156ecb439b4103b757fd265f276bb30374", "c4a05883266b815f39d97cbf2240406647985147", "6b16962db140590b808f02b5c2cb11a217aec46f", "79f391662afd8b7f1034d201932231b49dd02ab9", "cab4d9abc651c7efbafb429798d2c908f048bf5c")
+# P5/P6/r9: the executor pairing moved from fc034d14 to 7170da59 to 11de097c to 62a5cc15 to c4a05883 to 6b16962d to 79f39166 to cab4d9ab to ec728da6 to c5e97e87; the earlier pairings are replaced, not kept.
+PREVIOUS_P2_RUNTIMES = ("fc034d140ce55d9887ac3a0aab598f3a2c05ea47", "7170da59e04854a3dbe13f151400d0ac368b8dcb", "11de097c450d3ad4d89f9add41b00e38e7cc2c7c", "62a5cc156ecb439b4103b757fd265f276bb30374", "c4a05883266b815f39d97cbf2240406647985147", "6b16962db140590b808f02b5c2cb11a217aec46f", "79f391662afd8b7f1034d201932231b49dd02ab9", "cab4d9abc651c7efbafb429798d2c908f048bf5c", "ec728da6dc301a664b331ac8986afd6e850a1273")
 PREVIOUS_P2_CONTROL_PLANES = ("128eaa5e36fdff772fdc709581712dbeac046db3", "3755c71a20eab1a41135967b682342c809929572", "3cd17ead6b24301290ad1e50ae4b22bbd93c12fb", "6093aca7b945698e89c0d8ac7c75306375e1a298", "2bac7875391cad0a431fa0d75208b7ade39743e3", "5c474ba83a1477df93dec92d076f8e62b0a98ae1", "e77fe0ee8714617899592528e660a80fbb2e864a", "0a41faa972699f7ec3063967a14cd9bdd3e67d27")
-PREVIOUS_P2_REPLAYS = ("541180fde891a3048b8a61e77518f3311917e00b", "46e8bd7c263f5075cac3a7a9defcb265384f40e9", "c8e665bd1936e4da90f6a324b486a320934c4bff", "2a7963b18d96eb2e9e4fdb1a09c7588cf5c0ef00", "6a6a477495ac24e813f12bb0fe314acfe8bac9cf", "d268b1ea864cfb9400fab334f1f72987cb1409bb", "53c0cd60d565ea1797ed0be87a2310c5b68b24f6", "028f63d1c001f99580583888fa4b4e46d77a267b")
+PREVIOUS_P2_REPLAYS = ("c58e4ae13f1fe6fcc84f3c1ac14862d07b10270e", "541180fde891a3048b8a61e77518f3311917e00b", "46e8bd7c263f5075cac3a7a9defcb265384f40e9", "c8e665bd1936e4da90f6a324b486a320934c4bff", "2a7963b18d96eb2e9e4fdb1a09c7588cf5c0ef00", "6a6a477495ac24e813f12bb0fe314acfe8bac9cf", "d268b1ea864cfb9400fab334f1f72987cb1409bb", "53c0cd60d565ea1797ed0be87a2310c5b68b24f6", "028f63d1c001f99580583888fa4b4e46d77a267b", "ab421ad0fdc6a24999273adf82455968953598ae")
 
 
 @pytest.fixture
@@ -144,7 +144,7 @@ def test_earlier_generations_do_not_require_the_p2_mapping(p2_replay):
 
 def test_executor_profile_identity_is_the_replay_profile_of_the_pinned_runtime(p2_replay):
     bundle = p2_bundle()
-    assert bundle["producer_profiles"][1]["profile_id"] == "moltbot-safe-executor-producer-2.0.0@ec728da6"
+    assert bundle["producer_profiles"][1]["profile_id"] == "moltbot-safe-executor-producer-2.0.0@c5e97e87"
     bundle["producer_profiles"][1]["profile_id"] = "moltbot-safe-executor-producer-2.0.0@3024ef6e"
     with pytest.raises(ImportContractError, match="requires accepted Replay producer profile identity"):
         imp._validate_headers(MANIFEST, bundle)
