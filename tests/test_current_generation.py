@@ -43,7 +43,7 @@ pytestmark = pytest.mark.real_distribution_check
 FIX = Path(__file__).parent / "fixtures" / "current_generation"
 # Written out here on purpose (not read back from the importer), so a typo in the importer fails these tests.
 CUR = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
-       "replay": "d48b8f1995fecdb928315aba27acbe0c48ad997c",
+       "replay": "bb5fe6f3cb3775729bc3a1434ad45dbc985636c8",
        "control_plane": "b19c47ddd020409d24e52e70b11359c46265edbb",
        "moltbot_safe": "f7a55e2a8494801e49193f9f46935f0a971c248d"}
 CUR_CP_PROFILE = "control-plane-current-stack@b19c47dd"
@@ -54,6 +54,7 @@ GENERATED = "2026-10-05T19:05:00+00:00"
 SCENARIOS = ("adapter-default", "adapter-operation-identity", "atomic-default", "atomic-operation-key")
 OTHER_GENERATIONS = {"security": OLD, "f5b": F5B, "p4": P4, "p2": P2}
 ENV = "AGEP_CUR_REPLAY_SOURCE"
+REQUIRE_ENV = "AGEP_REQUIRE_CUR_E2E"  # =1: a missing or shadowed Replay source FAILS the end-to-end tests instead of skipping them (set in CI)
 CUR_CONSTANTS = dict(CONTROL_PLANE_CUR_REVISION=CUR["control_plane"], MOLTBOT_CUR_REVISION=CUR["moltbot_safe"],
                      MANIFEST_CUR_REVISION=CUR["manifest"], BOUNDED_CUR_PROFILE=CUR_CP_PROFILE)
 
@@ -288,6 +289,10 @@ def _git(*args, cwd=None):
     return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True, timeout=300).stdout.strip()
 
 
+def _e2e_required():
+    return os.environ.get(REQUIRE_ENV) == "1"
+
+
 def _distribution_metadata_present():
     import importlib.metadata as metadata
     try:
@@ -302,6 +307,8 @@ def replay_source_clone(tmp_path_factory):
     """Clean scratch clone of the Replay repository (never the original checkout), HEAD at the pin."""
     source = os.environ.get(ENV)
     if not source:
+        if _e2e_required():
+            pytest.fail(f"{REQUIRE_ENV}=1 but {ENV} is not set: the current-generation end-to-end tests cannot run")
         pytest.skip(f"{ENV} is not set: no Replay checkout to make the pinned scratch clone from")
     root = tmp_path_factory.mktemp("replay-scratch")
     clone = root / "replay"
@@ -314,6 +321,8 @@ def replay_source_clone(tmp_path_factory):
 
 def _activate(monkeypatch, clone):
     if _distribution_metadata_present():
+        if _e2e_required():
+            pytest.fail(f"{REQUIRE_ENV}=1 but an installed agent-replay-bundle distribution's metadata shadows the scratch clone (install the pack without the replay extra)")
         pytest.skip("an installed agent-replay-bundle distribution's metadata would shadow the scratch clone")
     for name in [n for n in sys.modules if n == "agent_replay_bundle" or n.startswith("agent_replay_bundle.")]:
         monkeypatch.delitem(sys.modules, name)
@@ -555,3 +564,39 @@ def test_pack_refuses_selection_refusal_and_authorization_pin_evidence(cur_repla
     _record(bundle, "execution_result")["data"].setdefault("control_plane_evidence", {})[member] = {"version": "0.1"}
     with pytest.raises(ImportContractError, match="pinned Replay semantic validation failed: .*unsupported typed refusal executor evidence field"):
         _pack(bundle)
+
+
+# ------------------------------------------------------------------------------------------------ the CI switch cannot be silently skipped
+def _inner_e2e(tmp_path, *, require, source, shadow):
+    """Run one end-to-end case in a child pytest with a controlled environment; returns (returncode, output)."""
+    root = Path(__file__).resolve().parent.parent
+    env = {k: v for k, v in os.environ.items() if k not in (ENV, REQUIRE_ENV, "PYTHONPATH")}
+    paths = [str(root), str(root / "src")]
+    if shadow:
+        dist = tmp_path / "shadow" / "agent_replay_bundle-0.0.dist-info"
+        dist.mkdir(parents=True, exist_ok=True)
+        (dist / "METADATA").write_text("Metadata-Version: 2.1\nName: agent-replay-bundle\nVersion: 0.0\n")
+        paths.append(str(tmp_path / "shadow"))
+    env["PYTHONPATH"] = os.pathsep.join(paths)
+    if require:
+        env[REQUIRE_ENV] = "1"
+    if source:
+        env[ENV] = source
+    node = "tests/test_current_generation.py::test_real_current_bundle_is_admitted_with_the_pinned_generation_and_keeps_its_content[adapter-default]"
+    done = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", node, "-rs"], cwd=root, env=env,
+                          capture_output=True, text=True, timeout=600)
+    return done.returncode, done.stdout + done.stderr
+
+
+def test_a_missing_replay_source_skips_by_default_but_fails_when_the_ci_switch_is_set(tmp_path):
+    code, out = _inner_e2e(tmp_path, require=False, source=None, shadow=False)
+    assert code == 0 and "1 skipped" in out, out
+    code, out = _inner_e2e(tmp_path, require=True, source=None, shadow=False)
+    assert code != 0 and "cannot run" in out and "skipped" not in out, out
+
+
+def test_an_installed_replay_distribution_skips_by_default_but_fails_when_the_ci_switch_is_set(tmp_path, replay_source_clone):
+    code, out = _inner_e2e(tmp_path, require=False, source=str(replay_source_clone), shadow=True)
+    assert code == 0 and "1 skipped" in out, out
+    code, out = _inner_e2e(tmp_path, require=True, source=str(replay_source_clone), shadow=True)
+    assert code != 0 and "shadows the scratch clone" in out and "skipped" not in out, out
