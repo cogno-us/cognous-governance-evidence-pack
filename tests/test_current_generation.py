@@ -1,8 +1,8 @@
 """Current generation (CUR): Control Plane b19c47dd, runtime f7a55e2a, Manifest fa170815, Replay pin ``imp.CUR_REPLAY_PIN``.
 
 Added beside Programme 2 (P2 and every earlier generation are unchanged), exactly paired, never mixed. PROVISIONAL DEVELOPMENT PIN,
-UNQUALIFIED (inherited from P2). The Replay pin is the head of the not yet merged Replay PR cogno-us/cognous-replay-bundle#80; it is
-written once (``CUR_REPLAY_PIN``) and re-tied to the Replay merge commit with a one-line change.
+UNQUALIFIED (inherited from P2). The Replay pin is the merge commit d395e37c of Replay PR cogno-us/cognous-replay-bundle#81 (E1); it is
+written once (``CUR_REPLAY_PIN``) and a later Replay re-tie is a one-line change.
 
 Two kinds of case:
 
@@ -43,7 +43,7 @@ pytestmark = pytest.mark.real_distribution_check
 FIX = Path(__file__).parent / "fixtures" / "current_generation"
 # Written out here on purpose (not read back from the importer), so a typo in the importer fails these tests.
 CUR = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
-       "replay": "bb5fe6f3cb3775729bc3a1434ad45dbc985636c8",
+       "replay": "d395e37c443fedf1bf6b9a4651338b7b7de4a553",
        "control_plane": "b19c47ddd020409d24e52e70b11359c46265edbb",
        "moltbot_safe": "f7a55e2a8494801e49193f9f46935f0a971c248d"}
 CUR_CP_PROFILE = "control-plane-current-stack@b19c47dd"
@@ -463,6 +463,30 @@ def test_a_current_bundle_is_refused_when_the_installed_replay_is_not_at_the_pin
     assert _trace(_pack(bundle))["replay_semantic_validation"]["required_revision"] == CUR["replay"]
 
 
+# Two specific historical Replay heads that must NOT satisfy the gate: bb5fe6f3 (merge commit of #80, the pin before E1 was merged) and
+# a88a383e (head of the E1 PR branch, the second parent of the E1 merge commit d395e37c). Written out here, not read from the importer.
+SUPERSEDED_REPLAY_HEADS = {"bb5fe6f3cb3775729bc3a1434ad45dbc985636c8": "merge commit of Replay #80 (pin before E1)",
+                           "a88a383ee3288b2776d50f4f9ea1dc92ec791df3": "head of the E1 PR branch (second parent of the pin)"}
+
+
+@pytest.mark.parametrize("head", sorted(SUPERSEDED_REPLAY_HEADS), ids=lambda h: h[:8])
+def test_the_pinned_gate_refuses_the_superseded_replay_heads(monkeypatch, replay_source_clone, tmp_path, head):
+    bundle = _bundle_of(_activate(monkeypatch, replay_source_clone), "adapter-default")
+    clone = tmp_path / "superseded"
+    shutil.copytree(replay_source_clone, clone)
+    _git("checkout", "--quiet", head, cwd=clone)  # a real Replay checkout, clean tree
+    assert _git("rev-parse", "HEAD", cwd=clone) == head != CUR["replay"] == "d395e37c443fedf1bf6b9a4651338b7b7de4a553"
+    assert _git("status", "--porcelain", "--untracked-files=no", cwd=clone) == ""
+    _activate(monkeypatch, clone)
+    assert imp._installed_replay_revision() == head
+    with pytest.raises(ImportContractError, match=f"installed Replay distribution revision '{head}' is not the pinned revision {CUR['replay']}"):
+        imp._require_pinned_replay_distribution(CUR["replay"])
+    with pytest.raises(ImportContractError, match=f"is not the pinned revision {CUR['replay']}"):
+        _pack(bundle)  # also through the whole import, not only the gate function
+    _activate(monkeypatch, replay_source_clone)  # control: the pin itself passes the same gate
+    imp._require_pinned_replay_distribution(CUR["replay"])
+
+
 def test_the_p2_pin_is_unchanged_by_the_current_generation(monkeypatch, replay_source_clone, tmp_path):
     """A P2 Replay at 40012b8c is still the pin of a P2 bundle, and the current Replay is not (P2 is not re-pointed)."""
     assert imp._expected_replay_revision(_bundle(P2["control_plane"], P2["moltbot_safe"], P2["manifest"])) == P2_REPLAY
@@ -563,6 +587,44 @@ def test_pack_refuses_selection_refusal_and_authorization_pin_evidence(cur_repla
     _record(bundle, "executor_control_plane_evidence")["data"][member] = {"version": "0.1"}
     _record(bundle, "execution_result")["data"].setdefault("control_plane_evidence", {})[member] = {"version": "0.1"}
     with pytest.raises(ImportContractError, match="pinned Replay semantic validation failed: .*unsupported typed refusal executor evidence field"):
+        _pack(bundle)
+
+
+# ------------------------------------------------------------------------------------- E1 Registry-governed profile: unsupported scope
+GOVERNED_SELECTOR = "registry-governed-effective-configuration/0.1"
+GOVERNED_PROFILE = "control-plane-current-stack-registry-governed-effective-configuration-0.1@b19c47dd"
+GOVERNED_SCENARIOS = ("governed_executed", "governed_binding_changed", "governed_decided_only", "governed_age_only")
+
+
+def _governed_bundle(replay_module, clone, name):
+    """A REAL bundle produced by Replay at the pin under the E1 Registry-governed profile (Replay's own fixtures at the pin, read from the clone)."""
+    fix = clone / "tests" / "fixtures" / "registry_governed_effective_configuration" / name
+    cp, proposal = (json.loads((fix / f"{n}.json").read_text()) for n in ("control_plane_run", "proposal"))
+    bundle = replay_module.import_bounded_workflow(cp, proposal=proposal, moltbot_export=None, control_plane_revision=CUR["control_plane"],
+                                                   control_plane_profile=GOVERNED_SELECTOR).model_dump(mode="json")
+    assert [p["profile_id"] for p in bundle["producer_profiles"]] == [GOVERNED_PROFILE]
+    assert _record(bundle, "runtime_decision")["data"]["binding"]["runtime_authority"]["effective_configuration"]["version"] == "effective-configuration-binding/0.1"
+    return bundle
+
+
+@pytest.mark.parametrize("name", GOVERNED_SCENARIOS)
+def test_the_registry_governed_profile_is_explicitly_unsupported_by_the_pack(cur_replay, replay_source_clone, name):
+    """E1 (Replay #81) added a separate Registry-governed profile. The Pack was not asked to support it: a bundle Replay produces under it is
+    refused at the Pack's own producer-profile gate, before any semantic validation, and the plain current profile does not admit it either."""
+    bundle = _governed_bundle(cur_replay, replay_source_clone, name)
+    with pytest.raises(ImportContractError, match="^Control Plane producer profile identity contradicts accepted Replay revision/profile mapping$"):
+        _pack(bundle)
+    assert GOVERNED_PROFILE not in {v for v in vars(imp).values() if isinstance(v, str)}  # the importer names no governed profile
+
+
+@pytest.mark.parametrize("name", ["governed_executed", "governed_decided_only"])
+def test_a_governed_bundle_relabelled_as_the_plain_current_profile_is_still_refused(cur_replay, replay_source_clone, name):
+    """Second gate: a caller who relabels a governed bundle with the plain current profile id passes the profile-identity gate but Replay at the
+    pin still refuses the effective_configuration member (provenance labels are caller-asserted; the member check is not)."""
+    bundle = json.loads(json.dumps(_governed_bundle(cur_replay, replay_source_clone, name)).replace(GOVERNED_PROFILE, CUR_CP_PROFILE))
+    for key in ("control_plane_profile", "effective_configuration_verification"):
+        bundle["metadata"].pop(key, None)
+    with pytest.raises(ImportContractError, match="pinned Replay semantic validation failed: .*runtime authority fields unsupported"):
         _pack(bundle)
 
 

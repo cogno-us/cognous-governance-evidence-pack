@@ -102,10 +102,10 @@ P2_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.8-programme
 # Current generation (CUR), added BESIDE Programme 2 (P2 is unchanged and keeps its own tuple, constants and transformation): Control Plane b19c47dd, runtime f7a55e2a,
 # Manifest fa170815 (unchanged from P2), and the Replay revision below. One exact tuple, paired with itself only: never a range, prefix, wildcard or "latest", and no
 # historical label is applied to current code. PROVISIONAL DEVELOPMENT PIN, UNQUALIFIED (inherited from P2): the Replay revision is the merge commit of Replay PR
-# cogno-us/cognous-replay-bundle#80 (main at the time of tying); CUR_REPLAY_PIN is the only place it is written, so a later Replay re-tie is a one-line change.
+# cogno-us/cognous-replay-bundle#81 (E1, Registry-governed profile; main at the time of tying; earlier tied to #80's merge commit bb5fe6f3, superseded); CUR_REPLAY_PIN is the only place it is written, so a later Replay re-tie is a one-line change.
 # Supported scope: the plain bounded run. NOT supported, still refused through Replay's exact-key validators: runtime_authority.effective_configuration, the policy-binding
 # members, reason vocabulary 0.3, selection_refusal and authorization_pin evidence. Provenance labels remain caller-asserted.
-CUR_REPLAY_PIN = "bb5fe6f3cb3775729bc3a1434ad45dbc985636c8"
+CUR_REPLAY_PIN = "d395e37c443fedf1bf6b9a4651338b7b7de4a553"
 CUR_REVISIONS = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
     "replay": CUR_REPLAY_PIN,
     "control_plane": "b19c47ddd020409d24e52e70b11359c46265edbb",
