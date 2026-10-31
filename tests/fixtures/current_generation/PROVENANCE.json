@@ -1,0 +1,26 @@
+{
+ "source": "Real Control Plane b19c47ddd020409d24e52e70b11359c46265edbb run records, proposals and runtime f7a55e2a8494801e49193f9f46935f0a971c248d exports of the four paired scenarios (adapter-default, adapter-operation-identity, atomic-default, atomic-operation-key), originally captured with Replay's capture_paired.py from pristine checkouts of those revisions; synthetic data, nothing hand-edited. These 12 per-scenario files are NOT vendored in Replay (Replay #80/#81 carry a different set of scenarios, produced by capture_current.py). Re-capture check 2026-10-31: Replay's capture_paired.py (at the earlier, now superseded, Replay pin bb5fe6f3cb3775729bc3a1434ad45dbc985636c8; the script is unchanged between bb5fe6f3 and the current pin d395e37c, per git diff) was re-run against pristine Control Plane b19c47ddd020409d24e52e70b11359c46265edbb and runtime f7a55e2a8494801e49193f9f46935f0a971c248d in scratch; the 4 proposals are byte-identical to the committed files, and the 8 control_plane_run / executor files are structurally equivalent (same keys, shapes and values) differing only in generated UUIDs (one consistent one-to-one mapping per file), process ids and float timestamps; 0 residual differences. The committed files are therefore equivalent to a re-capture, not byte-identical (UUIDs, pids and timestamps are run-specific). manifest.json is a byte copy of tests/fixtures/p2_generation/manifest.json (the action manifest fa170815 did not change; the proposals are byte-identical to the p2_generation proposals).",
+ "producer": {
+  "control_plane": "b19c47ddd020409d24e52e70b11359c46265edbb",
+  "runtime": "f7a55e2a8494801e49193f9f46935f0a971c248d",
+  "manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b"
+ },
+ "replay_pin": "d395e37c443fedf1bf6b9a4651338b7b7de4a553 (merge commit of cogno-us/cognous-replay-bundle#81, E1; supersedes bb5fe6f3, the merge commit of #80; PROVISIONAL DEVELOPMENT PIN, UNQUALIFIED)",
+ "scope": "Plain bounded run only: no effective_configuration, policy-binding, reason vocabulary 0.3, selection_refusal or authorization_pin evidence is captured or supported.",
+ "used_by": "tests/test_current_generation.py (end to end against a scratch clone of Replay at the pin when AGEP_CUR_REPLAY_SOURCE is set; skipped when unset unless AGEP_REQUIRE_CUR_E2E=1, which turns every skip into a failure; the CI job current-generation-e2e sets both)",
+ "sha256": {
+  "adapter-default/control_plane_run.json": "f5cbecf47e3964c1e14d460302095fd7b11c08ddf4dd8e28640b0c6dbd39c6cd",
+  "adapter-default/executor.json": "8464df06e0bc9276487405224b91fc910117b84394818f0f653e02885d7deec7",
+  "adapter-default/proposal.json": "ae6f275c3f5a8fb417b74c7907bff014da6aa09b92e9839973dc86345de1c973",
+  "adapter-operation-identity/control_plane_run.json": "f10f28250878c818dc54f5811289eb0f8a29dd5e6542c69fba909eb036003ffd",
+  "adapter-operation-identity/executor.json": "a55b97ccaff3838589838b7d313553c3a282c9f981da47f8fe20dd71b878d373",
+  "adapter-operation-identity/proposal.json": "ae6f275c3f5a8fb417b74c7907bff014da6aa09b92e9839973dc86345de1c973",
+  "atomic-default/control_plane_run.json": "7fd1fdff55e3631443ad9ea6f608fe15a407df9d6c9fcc4dfbf7d48f8fca81bf",
+  "atomic-default/executor.json": "0953337d815ac74b9bf436b9ecf1dbec4c8eed80f4e2703d0253da04941ece06",
+  "atomic-default/proposal.json": "ae6f275c3f5a8fb417b74c7907bff014da6aa09b92e9839973dc86345de1c973",
+  "atomic-operation-key/control_plane_run.json": "bbbb0c30948437f343dae690235aeda76ad1df732f7046f2f550cd48db3a054b",
+  "atomic-operation-key/executor.json": "573784280616b29bdcc075305f7a2e8829dedd4c7bdc6a5ff2c3495ebf52a490",
+  "atomic-operation-key/proposal.json": "ae6f275c3f5a8fb417b74c7907bff014da6aa09b92e9839973dc86345de1c973",
+  "manifest.json": "2de33f6fd0936ec56013a5eddb99c8c4a2943ab463f8ee9c3898780a8da20e58"
+ }
+}
