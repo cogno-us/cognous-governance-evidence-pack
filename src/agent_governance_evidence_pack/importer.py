@@ -561,6 +561,9 @@ def _contains_key(value: Any, key: str) -> bool:
     return False
 
 
+CUR_EXECUTOR_FAILURE_REFERENCE_VERIFICATION = "source_asserted_not_independently_verified"
+
+
 def _check_current_generation_metadata(bundle: dict[str, Any], profiles: list[Any]) -> None:
     """Current generation only: refuse governed (E1) metadata labels and require the generation's own revision labels.
 
@@ -575,6 +578,11 @@ def _check_current_generation_metadata(bundle: dict[str, Any], profiles: list[An
         raise ImportContractError("metadata carries effective_configuration, which is unsupported under the current generation")
     if metadata.get("manifest_revision") != CUR_REVISIONS["manifest"]:
         raise ImportContractError("metadata.manifest_revision must be present and equal to the current-generation Manifest revision")
+    if metadata.get("executor_failure_reference_verification") != CUR_EXECUTOR_FAILURE_REFERENCE_VERIFICATION:
+        raise ImportContractError(
+            "metadata.executor_failure_reference_verification must be present and equal to the genuine "
+            f"{CUR_EXECUTOR_FAILURE_REFERENCE_VERIFICATION!r} under the current generation"
+        )
     has_executor = any(isinstance(p, dict) and p.get("repository") == "cogno-us/moltbot-safe" for p in profiles)
     expected_executor = CUR_REVISIONS["moltbot_safe"] if has_executor else None
     if metadata.get("moltbot_safe_revision") != expected_executor:

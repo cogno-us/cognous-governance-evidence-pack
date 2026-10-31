@@ -53,6 +53,9 @@ P2_REPLAY = "40012b8c174c6f25685bd5d9bc93ff46cc9a5842"
 GENERATED = "2026-10-05T19:05:00+00:00"
 SCENARIOS = ("adapter-default", "adapter-operation-identity", "atomic-default", "atomic-operation-key")
 OTHER_GENERATIONS = {"security": OLD, "f5b": F5B, "p4": P4, "p2": P2}
+EXE_NOT_PAIRED = "executor producer revision is not paired with the selected security-runtime Control Plane generation"
+MANIFEST_NOT_PAIRED = "Manifest revision is not paired with the selected security-runtime Control Plane generation"
+GENUINE_VERIFICATION = "source_asserted_not_independently_verified"
 ENV = "AGEP_CUR_REPLAY_SOURCE"
 REQUIRE_ENV = "AGEP_REQUIRE_CUR_E2E"  # =1: a missing or shadowed Replay source FAILS the end-to-end tests instead of skipping them (set in CI)
 CUR_CONSTANTS = dict(CONTROL_PLANE_CUR_REVISION=CUR["control_plane"], MOLTBOT_CUR_REVISION=CUR["moltbot_safe"],
@@ -88,6 +91,7 @@ def cur_bundle(cp=CUR["control_plane"], executor=CUR["moltbot_safe"], manifest_r
     bundle = _bundle(cp, executor, manifest_revision if manifest_revision is not None or cp != CUR["control_plane"] else CUR["manifest"])
     if cp == CUR["control_plane"]:
         bundle["metadata"]["moltbot_safe_revision"] = executor  # the label Replay writes for a bundle with an executor
+        bundle["metadata"]["executor_failure_reference_verification"] = GENUINE_VERIFICATION  # the genuine Replay value
         bundle["producer_profiles"][0]["profile_id"] = CUR_CP_PROFILE
         bundle["records"][0]["producer_profile_id"] = CUR_CP_PROFILE
     return bundle
@@ -157,22 +161,22 @@ def test_current_selects_only_its_own_revisions(cur_replay_stub):
 @pytest.mark.parametrize("name", sorted(OTHER_GENERATIONS))
 def test_current_cross_generation_pairs_rejected_both_ways(cur_replay_stub, name):
     other = OTHER_GENERATIONS[name]
-    with pytest.raises(ImportContractError, match="not paired"):
+    with pytest.raises(ImportContractError, match=EXE_NOT_PAIRED):
         imp._validate_headers(MANIFEST, cur_bundle(CUR["control_plane"], other["moltbot_safe"]))
-    with pytest.raises(ImportContractError, match="not paired"):
+    with pytest.raises(ImportContractError, match=EXE_NOT_PAIRED):
         imp._validate_headers(MANIFEST, _other_bundle(other, CUR["moltbot_safe"]))
 
 
 def test_current_executor_with_the_runtime_authority_control_plane_and_the_reverse_is_rejected(cur_replay_stub):
-    with pytest.raises(ImportContractError, match="not paired"):
+    with pytest.raises(ImportContractError, match=EXE_NOT_PAIRED):
         imp._validate_headers(MANIFEST, cur_bundle(CUR["control_plane"], RUNTIME_AUTHORITY_EXECUTOR))
-    with pytest.raises(ImportContractError, match="not paired"):
+    with pytest.raises(ImportContractError, match=EXE_NOT_PAIRED):
         imp._validate_headers(MANIFEST, cur_bundle(imp.RUNTIME_AUTHORITY_REVISIONS["control_plane"], CUR["moltbot_safe"]))
 
 
 @pytest.mark.parametrize("manifest_revision", [OLD["manifest"], F5B["manifest"], "0" * 40])
 def test_current_with_a_manifest_of_another_generation_is_rejected(cur_replay_stub, manifest_revision):
-    with pytest.raises(ImportContractError, match="not paired"):
+    with pytest.raises(ImportContractError, match=MANIFEST_NOT_PAIRED):
         imp._validate_headers(MANIFEST, cur_bundle(manifest_revision=manifest_revision))
 
 
@@ -753,6 +757,42 @@ def test_a_real_current_bundle_with_a_missing_or_wrong_manifest_label_is_refused
         _pack(bundle)
 
 
+@pytest.mark.parametrize("name", SCENARIOS)
+def test_the_genuine_current_bundles_carry_the_exact_failure_reference_label(cur_replay, name):
+    assert _bundle_of(cur_replay, name)["metadata"]["executor_failure_reference_verification"] == GENUINE_VERIFICATION
+
+
+@pytest.mark.parametrize("value", ["independently_verified_authoritative", "verified", GENUINE_VERIFICATION.upper(), GENUINE_VERIFICATION + " ",
+                                   GENUINE_VERIFICATION[:-1], None, "", True, ["x"], {"a": 1}])
+def test_a_real_current_bundle_with_a_forged_failure_reference_label_is_refused_and_never_reaches_the_trace(cur_replay, value):
+    bundle = _bundle_of(cur_replay, "atomic-default")
+    bundle["metadata"]["executor_failure_reference_verification"] = value
+    with pytest.raises(ImportContractError, match="metadata.executor_failure_reference_verification must be present and equal"):
+        _pack(bundle)
+
+
+def test_a_real_current_bundle_without_the_failure_reference_label_is_a_clean_contract_error(cur_replay):
+    bundle = _bundle_of(cur_replay, "atomic-default")
+    del bundle["metadata"]["executor_failure_reference_verification"]
+    with pytest.raises(ImportContractError, match="metadata.executor_failure_reference_verification must be present and equal"):
+        _pack(bundle)
+
+
+@pytest.mark.parametrize("name", SCENARIOS)
+def test_the_genuine_failure_reference_label_reaches_the_trace_unchanged(cur_replay, name):
+    assert _trace(_pack(_bundle_of(cur_replay, name)))["executor_failure_reference_verification"] == GENUINE_VERIFICATION
+
+
+def test_the_failure_reference_label_is_required_under_current_only_in_the_stub_too(cur_replay_stub):
+    bundle = cur_bundle()
+    for mutate in (lambda m: m.pop("executor_failure_reference_verification"),
+                   lambda m: m.update(executor_failure_reference_verification="independently_verified_authoritative")):
+        broken = json.loads(json.dumps(bundle))
+        mutate(broken["metadata"])
+        with pytest.raises(ImportContractError, match="executor_failure_reference_verification"):
+            imp._validate_headers(MANIFEST, broken)
+
+
 def test_stub_current_labels_are_required_and_p2_is_unaffected(cur_replay_stub):
     bundle = cur_bundle()
     imp._validate_headers(MANIFEST, bundle)
@@ -764,4 +804,5 @@ def test_stub_current_labels_are_required_and_p2_is_unaffected(cur_replay_stub):
             imp._validate_headers(MANIFEST, broken)
     p2 = _other_bundle(P2, P2["moltbot_safe"])
     p2["metadata"].pop("moltbot_safe_revision", None)
-    imp._validate_headers(MANIFEST, p2)  # P2 does not require (or check) the labels
+    p2["metadata"]["executor_failure_reference_verification"] = "independently_verified_authoritative"
+    imp._validate_headers(MANIFEST, p2)  # P2 does not require (or check) the labels, including the failure-reference label
