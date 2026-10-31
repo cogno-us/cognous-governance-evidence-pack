@@ -102,7 +102,7 @@ P2_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.8-programme
 # Current generation (CUR), added BESIDE Programme 2 (P2 is unchanged and keeps its own tuple, constants and transformation): Control Plane b19c47dd, runtime f7a55e2a,
 # Manifest fa170815 (unchanged from P2), and the Replay revision below. One exact tuple, paired with itself only: never a range, prefix, wildcard or "latest", and no
 # historical label is applied to current code. PROVISIONAL DEVELOPMENT PIN, UNQUALIFIED (inherited from P2): the Replay revision is the merge commit of Replay PR
-# cogno-us/cognous-replay-bundle#81 (E1, Registry-governed profile; main at the time of tying; earlier tied to #80's merge commit bb5fe6f3, superseded); CUR_REPLAY_PIN is the only place it is written, so a later Replay re-tie is a one-line change.
+# cogno-us/cognous-replay-bundle#81 (E1, Registry-governed profile; earlier tied to #80's merge commit bb5fe6f3, superseded); CUR_REPLAY_PIN is the only place it is written, so a later Replay re-tie is a one-line change.
 # Supported scope: the plain bounded run. NOT supported, still refused through Replay's exact-key validators: runtime_authority.effective_configuration, the policy-binding
 # members, reason vocabulary 0.3, selection_refusal and authorization_pin evidence. Provenance labels remain caller-asserted.
 CUR_REPLAY_PIN = "d395e37c443fedf1bf6b9a4651338b7b7de4a553"
@@ -549,6 +549,36 @@ def _check_security_generation_pairing(bundle: dict[str, Any], profiles: list[An
         manifest_revision = (bundle.get("metadata") or {}).get("manifest_revision")
         if manifest_revision is not None and manifest_revision != _security_revisions(bundle)["manifest"]:
             raise ImportContractError("Manifest revision is not paired with the selected security-runtime Control Plane generation")
+    if selected == CUR_REVISIONS["control_plane"]:
+        _check_current_generation_metadata(bundle, profiles)
+
+
+def _contains_key(value: Any, key: str) -> bool:
+    if isinstance(value, dict):
+        return key in value or any(_contains_key(item, key) for item in value.values())
+    if isinstance(value, list):
+        return any(_contains_key(item, key) for item in value)
+    return False
+
+
+def _check_current_generation_metadata(bundle: dict[str, Any], profiles: list[Any]) -> None:
+    """Current generation only: refuse governed (E1) metadata labels and require the generation's own revision labels.
+
+    The Pack does not support the Registry-governed profile, so a bundle must not carry its labels into retained sources.
+    No unknown-key rejection beyond these checks (provenance labels remain caller-asserted).
+    """
+    metadata = bundle.get("metadata") or {}
+    for key in ("control_plane_profile", "effective_configuration_verification"):
+        if key in metadata:
+            raise ImportContractError(f"metadata.{key} is a governed-profile label and is unsupported under the current generation")
+    if _contains_key(metadata, "effective_configuration"):
+        raise ImportContractError("metadata carries effective_configuration, which is unsupported under the current generation")
+    if metadata.get("manifest_revision") != CUR_REVISIONS["manifest"]:
+        raise ImportContractError("metadata.manifest_revision must be present and equal to the current-generation Manifest revision")
+    has_executor = any(isinstance(p, dict) and p.get("repository") == "cogno-us/moltbot-safe" for p in profiles)
+    expected_executor = CUR_REVISIONS["moltbot_safe"] if has_executor else None
+    if metadata.get("moltbot_safe_revision") != expected_executor:
+        raise ImportContractError("metadata.moltbot_safe_revision is not paired with the current-generation Control Plane")
 
 
 def _retained_by_type(bundle: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:

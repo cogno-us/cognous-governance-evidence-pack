@@ -87,6 +87,7 @@ def _other_bundle(other, executor):
 def cur_bundle(cp=CUR["control_plane"], executor=CUR["moltbot_safe"], manifest_revision=None):
     bundle = _bundle(cp, executor, manifest_revision if manifest_revision is not None or cp != CUR["control_plane"] else CUR["manifest"])
     if cp == CUR["control_plane"]:
+        bundle["metadata"]["moltbot_safe_revision"] = executor  # the label Replay writes for a bundle with an executor
         bundle["producer_profiles"][0]["profile_id"] = CUR_CP_PROFILE
         bundle["records"][0]["producer_profile_id"] = CUR_CP_PROFILE
     return bundle
@@ -614,7 +615,9 @@ def test_the_registry_governed_profile_is_explicitly_unsupported_by_the_pack(cur
     bundle = _governed_bundle(cur_replay, replay_source_clone, name)
     with pytest.raises(ImportContractError, match="^Control Plane producer profile identity contradicts accepted Replay revision/profile mapping$"):
         _pack(bundle)
-    assert GOVERNED_PROFILE not in {v for v in vars(imp).values() if isinstance(v, str)}  # the importer names no governed profile
+    assert GOVERNED_PROFILE[:-len("@b19c47dd")] not in Path(imp.__file__).read_text()  # the importer source names no governed profile id
+    assert GOVERNED_SELECTOR not in Path(imp.__file__).read_text()
+    assert GOVERNED_PROFILE not in json.dumps(imp.SECURITY_RUNTIME_GENERATIONS) and GOVERNED_PROFILE not in imp._accepted_replay_v2_profiles(require_cur=True).values()
 
 
 @pytest.mark.parametrize("name", ["governed_executed", "governed_decided_only"])
@@ -662,3 +665,103 @@ def test_an_installed_replay_distribution_skips_by_default_but_fails_when_the_ci
     assert code == 0 and "1 skipped" in out, out
     code, out = _inner_e2e(tmp_path, require=True, source=str(replay_source_clone), shadow=True)
     assert code != 0 and "shadows the scratch clone" in out and "skipped" not in out, out
+
+
+# ------------------------------------------------------------------------- governed metadata labels and revision labels (review MEDIUM-1, LOW-1)
+GOVERNED_LABELS = {"control_plane_profile": GOVERNED_SELECTOR,
+                   "effective_configuration_verification": "internal_consistency_only_registry_source_revision_unverified"}
+
+
+def _relabelled_governed(cur_replay, clone, name):
+    """Replay's governed bundle with ONLY the profile id relabelled to the plain current id and every effective_configuration key stripped from records;
+    the two governed metadata labels are deliberately LEFT in place (they are not removed by this helper or by the tests)."""
+    bundle = json.loads(json.dumps(_governed_bundle(cur_replay, clone, name)).replace(GOVERNED_PROFILE, CUR_CP_PROFILE))
+    for key, value in GOVERNED_LABELS.items():
+        assert bundle["metadata"][key] == value
+
+    def strip(node):
+        if isinstance(node, dict):
+            node.pop("effective_configuration", None)
+            for item in node.values():
+                strip(item)
+        elif isinstance(node, list):
+            for item in node:
+                strip(item)
+    strip(bundle["records"])
+    return bundle
+
+
+@pytest.mark.parametrize("name", ["governed_executed", "governed_decided_only"])
+def test_a_relabelled_governed_bundle_keeping_its_governed_metadata_labels_is_refused(cur_replay, replay_source_clone, name):
+    bundle = _relabelled_governed(cur_replay, replay_source_clone, name)
+    with pytest.raises(ImportContractError, match="governed-profile label and is unsupported under the current generation"):
+        _pack(bundle)
+
+
+@pytest.mark.parametrize("keep", sorted(GOVERNED_LABELS))
+def test_either_governed_metadata_label_alone_is_refused_and_nothing_is_retained(cur_replay, replay_source_clone, keep):
+    bundle = _relabelled_governed(cur_replay, replay_source_clone, "governed_executed")
+    for key in GOVERNED_LABELS:
+        if key != keep:
+            del bundle["metadata"][key]
+    with pytest.raises(ImportContractError, match=f"metadata.{keep} is a governed-profile label"):
+        _pack(bundle)
+
+
+def test_a_clean_bundle_without_governed_labels_is_accepted_and_retains_none(cur_replay):
+    bundle = _bundle_of(cur_replay, "atomic-default")
+    pack = _pack(bundle)
+    retained = json.dumps(_trace(pack)["retained_sources"])
+    for needle in (*GOVERNED_LABELS, "effective_configuration", GOVERNED_SELECTOR):
+        assert needle not in retained
+
+
+@pytest.mark.parametrize("where", ["metadata", "nested"])
+def test_an_effective_configuration_key_in_metadata_is_refused(cur_replay, where):
+    bundle = _bundle_of(cur_replay, "atomic-default")
+    if where == "metadata":
+        bundle["metadata"]["effective_configuration"] = {"version": "x"}
+    else:
+        bundle["metadata"]["moltbot_producer_contract"] = {**bundle["metadata"]["moltbot_producer_contract"], "x": [{"effective_configuration": 1}]}
+    with pytest.raises(ImportContractError, match="effective_configuration"):
+        _pack(bundle)
+
+
+@pytest.mark.parametrize("name", SCENARIOS)
+def test_the_genuine_current_bundles_carry_exactly_the_revision_labels_the_pack_requires(cur_replay, name):
+    metadata = _bundle_of(cur_replay, name)["metadata"]
+    assert metadata["manifest_revision"] == CUR["manifest"] and metadata["moltbot_safe_revision"] == CUR["moltbot_safe"]
+    assert not set(GOVERNED_LABELS) & set(metadata)
+
+
+@pytest.mark.parametrize("value", [P2["moltbot_safe"], P4["moltbot_safe"], CUR["moltbot_safe"][:8], CUR["moltbot_safe"].upper(), None, ""])
+def test_a_real_current_bundle_with_another_executor_label_is_refused(cur_replay, value):
+    bundle = _bundle_of(cur_replay, "atomic-default")
+    bundle["metadata"]["moltbot_safe_revision"] = value
+    with pytest.raises(ImportContractError, match="metadata.moltbot_safe_revision is not paired"):
+        _pack(bundle)
+
+
+@pytest.mark.parametrize("mode", ["absent", "none", "p2", "near_miss"])
+def test_a_real_current_bundle_with_a_missing_or_wrong_manifest_label_is_refused(cur_replay, mode):
+    bundle = _bundle_of(cur_replay, "atomic-default")
+    if mode == "absent":
+        del bundle["metadata"]["manifest_revision"]
+    else:
+        bundle["metadata"]["manifest_revision"] = {"none": None, "p2": "0" * 40, "near_miss": CUR["manifest"][:-1] + "0"}[mode]
+    with pytest.raises(ImportContractError, match="manifest_revision|Manifest revision is not paired"):
+        _pack(bundle)
+
+
+def test_stub_current_labels_are_required_and_p2_is_unaffected(cur_replay_stub):
+    bundle = cur_bundle()
+    imp._validate_headers(MANIFEST, bundle)
+    for mutate in (lambda m: m.pop("manifest_revision"), lambda m: m.update(moltbot_safe_revision=P2["moltbot_safe"]),
+                   lambda m: m.update(control_plane_profile=GOVERNED_SELECTOR), lambda m: m.update(effective_configuration_verification="x")):
+        broken = json.loads(json.dumps(bundle))
+        mutate(broken["metadata"])
+        with pytest.raises(ImportContractError):
+            imp._validate_headers(MANIFEST, broken)
+    p2 = _other_bundle(P2, P2["moltbot_safe"])
+    p2["metadata"].pop("moltbot_safe_revision", None)
+    imp._validate_headers(MANIFEST, p2)  # P2 does not require (or check) the labels
