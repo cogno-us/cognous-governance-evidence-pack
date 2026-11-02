@@ -1,7 +1,7 @@
 """Current generation (CUR): Control Plane b19c47dd, runtime f7a55e2a, Manifest fa170815, Replay pin ``imp.CUR_REPLAY_PIN``.
 
 Added beside Programme 2 (P2 and every earlier generation are unchanged), exactly paired, never mixed. PROVISIONAL DEVELOPMENT PIN,
-UNQUALIFIED (inherited from P2). The Replay pin is the merge commit d395e37c of Replay PR cogno-us/cognous-replay-bundle#81 (E1); it is
+UNQUALIFIED (inherited from P2). The Replay pin is the merge commit 6f45e288 of Replay PR cogno-us/cognous-replay-bundle#82 (previously d395e37c, #81); it is
 written once (``CUR_REPLAY_PIN``) and a later Replay re-tie is a one-line change.
 
 Two kinds of case:
@@ -43,7 +43,7 @@ pytestmark = pytest.mark.real_distribution_check
 FIX = Path(__file__).parent / "fixtures" / "current_generation"
 # Written out here on purpose (not read back from the importer), so a typo in the importer fails these tests.
 CUR = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
-       "replay": "d395e37c443fedf1bf6b9a4651338b7b7de4a553",
+       "replay": "6f45e288ae37ec7e7712f9296760927d2d843bba",
        "control_plane": "b19c47ddd020409d24e52e70b11359c46265edbb",
        "moltbot_safe": "f7a55e2a8494801e49193f9f46935f0a971c248d"}
 CUR_CP_PROFILE = "control-plane-current-stack@b19c47dd"
@@ -468,9 +468,11 @@ def test_a_current_bundle_is_refused_when_the_installed_replay_is_not_at_the_pin
     assert _trace(_pack(bundle))["replay_semantic_validation"]["required_revision"] == CUR["replay"]
 
 
-# Two specific historical Replay heads that must NOT satisfy the gate: bb5fe6f3 (merge commit of #80, the pin before E1 was merged) and
-# a88a383e (head of the E1 PR branch, the second parent of the E1 merge commit d395e37c). Written out here, not read from the importer.
-SUPERSEDED_REPLAY_HEADS = {"bb5fe6f3cb3775729bc3a1434ad45dbc985636c8": "merge commit of Replay #80 (pin before E1)",
+# Three specific historical Replay heads that must NOT satisfy the gate: bb5fe6f3 (merge commit of #80, the pin before E1 was merged),
+# a88a383e (head of the E1 PR branch, the second parent of the E1 merge commit d395e37c) and d395e37c (merge commit of #81, the pin before Replay #82).
+# Written out here, not read from the importer.
+SUPERSEDED_REPLAY_HEADS = {"d395e37c443fedf1bf6b9a4651338b7b7de4a553": "merge commit of Replay #81 (pin before Replay #82)",
+                           "bb5fe6f3cb3775729bc3a1434ad45dbc985636c8": "merge commit of Replay #80 (pin before E1)",
                            "a88a383ee3288b2776d50f4f9ea1dc92ec791df3": "head of the E1 PR branch (second parent of the pin)"}
 
 
@@ -480,7 +482,7 @@ def test_the_pinned_gate_refuses_the_superseded_replay_heads(monkeypatch, replay
     clone = tmp_path / "superseded"
     shutil.copytree(replay_source_clone, clone)
     _git("checkout", "--quiet", head, cwd=clone)  # a real Replay checkout, clean tree
-    assert _git("rev-parse", "HEAD", cwd=clone) == head != CUR["replay"] == "d395e37c443fedf1bf6b9a4651338b7b7de4a553"
+    assert _git("rev-parse", "HEAD", cwd=clone) == head != CUR["replay"] == "6f45e288ae37ec7e7712f9296760927d2d843bba"
     assert _git("status", "--porcelain", "--untracked-files=no", cwd=clone) == ""
     _activate(monkeypatch, clone)
     assert imp._installed_replay_revision() == head
