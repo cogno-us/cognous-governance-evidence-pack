@@ -1,7 +1,7 @@
 """Current generation (CUR): Control Plane b19c47dd, runtime f7a55e2a, Manifest fa170815, Replay pin ``imp.CUR_REPLAY_PIN``.
 
 Added beside Programme 2 (P2 and every earlier generation are unchanged), exactly paired, never mixed. PROVISIONAL DEVELOPMENT PIN,
-UNQUALIFIED (inherited from P2). The Replay pin is the merge commit d395e37c of Replay PR cogno-us/cognous-replay-bundle#81 (E1); it is
+UNQUALIFIED (inherited from P2). The Replay pin is the merge commit 6f45e288 of Replay PR cogno-us/cognous-replay-bundle#82 (previously d395e37c, #81); it is
 written once (``CUR_REPLAY_PIN``) and a later Replay re-tie is a one-line change.
 
 Two kinds of case:
