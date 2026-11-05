@@ -47,6 +47,7 @@ CUR = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
        "control_plane": "b19c47ddd020409d24e52e70b11359c46265edbb",
        "moltbot_safe": "f7a55e2a8494801e49193f9f46935f0a971c248d"}
 CUR_CP_PROFILE = "control-plane-current-stack@b19c47dd"
+CP2_CONTROL_PLANE = "484fdbd297235dd24148ddb0703f2055a31eabff"  # strict-tenant generation, added later beside CUR
 CUR_EXECUTOR_PROFILE = "moltbot-safe-executor-producer-2.0.0@f7a55e2a"
 CUR_TRANSFORMATION = "agep-manifest-reconstruction-import/0.3.9-current-stack-candidate"
 P2_REPLAY = "40012b8c174c6f25685bd5d9bc93ff46cc9a5842"
@@ -117,9 +118,10 @@ def test_current_pins_are_in_exactly_the_sets_that_hold_the_other_generations():
     historical_cps = {imp.V2_REVISIONS["control_plane"], imp.CONTROL_PLANE_V2_PERSISTENCE_REVISION, imp.MERGED_REVISIONS["control_plane"],
                       imp.REFUSAL_REVISIONS["control_plane"], imp.RUNTIME_AUTHORITY_REVISIONS["control_plane"],
                       *(g["control_plane"] for g in OTHER_GENERATIONS.values())}
-    assert set(imp.ALL_CONTROL_PLANE_V2_REVISIONS) == historical_cps | {CUR["control_plane"]}
-    assert len(imp.ALL_CONTROL_PLANE_V2_REVISIONS) == len(historical_cps) + 1
-    assert set(imp.SECURITY_RUNTIME_GENERATIONS) == {g["control_plane"] for g in OTHER_GENERATIONS.values()} | {CUR["control_plane"]}
+    # The strict-tenant generation (CP-2, tests/test_cp2_generation.py) was added beside CUR after this test was written; it is the one later generation.
+    assert set(imp.ALL_CONTROL_PLANE_V2_REVISIONS) == historical_cps | {CUR["control_plane"], CP2_CONTROL_PLANE}
+    assert len(imp.ALL_CONTROL_PLANE_V2_REVISIONS) == len(historical_cps) + 2
+    assert set(imp.SECURITY_RUNTIME_GENERATIONS) == {g["control_plane"] for g in OTHER_GENERATIONS.values()} | {CUR["control_plane"], CP2_CONTROL_PLANE}
     assert imp.SECURITY_RUNTIME_GENERATIONS[CUR["control_plane"]] == (imp.CUR_REVISIONS, imp.CUR_TRANSFORMATION_VERSION)
     assert imp.REQUIRED_REPOS["cogno-us/cognous-agent-control-plane"] == {imp.CONTROL_PLANE_REVISION, *imp.ALL_CONTROL_PLANE_V2_REVISIONS}
     for repo, key in [("cogno-us/cognous-agent-action-manifest", "manifest"), ("cogno-us/cognous-agent-replay-bundle", "replay"),
@@ -136,7 +138,8 @@ def test_current_pins_are_in_exactly_the_sets_that_hold_the_other_generations():
 def test_current_pins_appear_in_the_importer_only_through_the_one_tuple():
     source = Path(imp.__file__).read_text()
     assert source.count(CUR["replay"]) == 1, "the Replay pin is written in ONE place"
-    assert source.count(CUR["control_plane"]) == 1 and source.count(CUR["moltbot_safe"]) == 1
+    # CP-2 writes the unchanged runtime literal a second time (as a literal on purpose, so a CUR re-tie cannot move CP-2); the Control Plane and Replay pins stay single.
+    assert source.count(CUR["control_plane"]) == 1 and source.count(CUR["moltbot_safe"]) == 2
     assert source.count("7a4bcd40b3b49e61ff3c294dcca53b52f460b22c") == 1 and source.count("c5e97e87dd239c821b1b4a406a55dcd03c5bc61f") == 1
 
 

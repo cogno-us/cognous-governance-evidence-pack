@@ -58,6 +58,35 @@ jobs:
         PYTHONDONTWRITEBYTECODE: '1'
         AGEP_CUR_REPLAY_SOURCE: ${{ runner.temp }}/replay-source
         AGEP_REQUIRE_CUR_E2E: '1'
+  cp2-generation-e2e:
+    # Strict-tenant (CP-2) end-to-end tests against the real Replay at CP2_REPLAY_PIN (the merge commit of Replay #88).
+    # Separate from `native` (its `replay` extra installs the P2 Replay, whose distribution metadata would shadow this checkout) and from
+    # `current-generation-e2e` (CUR keeps its own Replay pin, unchanged); a missing or shadowed Replay fails here (AGEP_REQUIRE_CP2_E2E=1) rather than skipping.
+    name: CP-2 strict-tenant end-to-end (Replay at the pin)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      with:
+        persist-credentials: false
+    - name: Clone Replay at CP2_REPLAY_PIN (read from the importer, so the pin is written once)
+      run: |
+        pin=$(sed -n 's/^CP2_REPLAY_PIN = "\([0-9a-f]\{40\}\)"$/\1/p' src/agent_governance_evidence_pack/importer.py)
+        test -n "$pin"
+        git clone --quiet https://github.com/cogno-us/cognous-replay-bundle.git "$RUNNER_TEMP/replay-source"
+        git -C "$RUNNER_TEMP/replay-source" fetch --quiet origin "$pin"
+        git -C "$RUNNER_TEMP/replay-source" checkout --quiet "$pin"
+        test "$(git -C "$RUNNER_TEMP/replay-source" rev-parse HEAD)" = "$pin"
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+      with:
+        python-version: '3.12'
+    - run: python -m pip install -e '.[dev]' 'pydantic>=2.0'
+    - run: python -m pytest -q tests/test_cp2_generation.py
+      env:
+        PYTHONPATH: .:src
+        PYTHONDONTWRITEBYTECODE: '1'
+        AGEP_CP2_REPLAY_SOURCE: ${{ runner.temp }}/replay-source
+        AGEP_REQUIRE_CP2_E2E: '1'
   cross-component:
     uses: cogno-us/cognous-stack-qualification/.github/workflows/cognous-governance-evidence-pack--tests.yml@1c1755ff4ea719cfa12f72bcd8c81dd51cff7fb2
     with:

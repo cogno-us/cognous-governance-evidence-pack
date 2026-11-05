@@ -1,0 +1,81 @@
+{
+ "attempt_events": [],
+ "attempt_identity": null,
+ "attempts": [],
+ "control_plane_attempts": [],
+ "control_plane_evidence": {
+  "failure_record_id": "31ca068e-cc07-4301-874d-a9c9cb438c26"
+ },
+ "effects": [],
+ "execution_envelope": {
+  "attempt_id": null,
+  "decision_id": "30f0fb3c-7707-4926-81fd-0ce037146dc6",
+  "effect_id": "sha256:4e5844d6d53ab6f8694e9c76cb6238ec4110137dd35de73cb0b22963961ecde8",
+  "operation": {
+   "action_id": "urn:cognous:action:refund-issue-routine-v1",
+   "actor": "urn:cognous:identity:refund-agent-1",
+   "adapter_id": "urn:cognous:adapter:synthetic-refund-v1",
+   "amount": 50.0,
+   "authority_context_id": "urn:cognous:alvorada:public-stack-profile:0.1.0",
+   "authority_domain": "customer-refunds",
+   "effective_max_effects": 1,
+   "effects": 1,
+   "grant_id": "urn:cognous:grant:routine-1",
+   "grant_revision": "1",
+   "institution_id": "urn:cognous:institution:synthetic-customer-service",
+   "manifest_digest": "sha256:4d1ad6c96bc242c63998231b4df3ad7c86dc2e5e59cdae63afe7bff86e60f6ac",
+   "manifest_id": "refund-integration-pilot-v1",
+   "manifest_version": "1.1",
+   "payload": {
+    "customer_id": "customer-001",
+    "refund_reason": "duplicate"
+   },
+   "payload_commitment": "sha256:6b782ebbcc034edeca4069b31aa4d8cbc9d3eeaf3b2034ab989bb430de962c0e",
+   "principal": "urn:cognous:principal:refund-service",
+   "proposal_commitment": "sha256:becaea3f10b5edf56ea181e0cd62793ebe8262238f948fb72dc5c0389c7f8c53",
+   "requested_permissions": [
+    "refund.issue.routine"
+   ],
+   "requirement_id": "urn:cognous:authority-requirement:refund-routine-v1",
+   "target": "urn:cognous:synthetic-account:customer-001",
+   "unit": "USD"
+  },
+  "version": "0.2.0"
+ },
+ "execution_result": {
+  "acknowledged": false,
+  "attempt_id": null,
+  "attempted": false,
+  "control_plane_evidence": {
+   "failure_record_id": "31ca068e-cc07-4301-874d-a9c9cb438c26"
+  },
+  "decision_id": "30f0fb3c-7707-4926-81fd-0ce037146dc6",
+  "effect_id": "sha256:4e5844d6d53ab6f8694e9c76cb6238ec4110137dd35de73cb0b22963961ecde8",
+  "error": "runtime proposal mismatch: tenant_id",
+  "newly_executed": false,
+  "observation": null,
+  "observed_state": "unknown",
+  "status": "denied"
+ },
+ "observations": [],
+ "producer_profile": {
+  "execution_envelope_version": "0.2.0",
+  "profile_id": "urn:cognous:profiles:moltbot-safe-executor-producer",
+  "profile_version": "2.0.0"
+ },
+ "provenance": {
+  "independently_established": [],
+  "meaning": "source_asserted values are emitted by the producer/caller; this export does not independently establish repository provenance",
+  "source_asserted": {
+   "producer_profile_id": "urn:cognous:profiles:moltbot-safe-executor-producer",
+   "producer_profile_version": "2.0.0",
+   "repository_revision": "f7a55e2a8494801e49193f9f46935f0a971c248d"
+  }
+ },
+ "rejected_observations": [],
+ "repository": {
+  "repository": "cogno-us/moltbot-safe",
+  "revision": "f7a55e2a8494801e49193f9f46935f0a971c248d",
+  "revision_status": "source_asserted"
+ }
+}
