@@ -1,8 +1,8 @@
 """Strict-tenant generation (CP-2): Control Plane 484fdbd2, runtime f7a55e2a, Manifest fa170815, Replay pin ``imp.CP2_REPLAY_PIN``.
 
 Added beside the current generation (CUR) and every earlier generation, which are unchanged. PROVISIONAL DEVELOPMENT PIN, UNQUALIFIED, non-authorizing:
-assigned under the Constitution at pin 1c2e920f, adoption not recorded. The Replay revision is PROVISIONAL (Replay PR cogno-us/cognous-replay-bundle#87 head
-d6c05bc5, to be re-pinned to the merge commit); it is written once (``CP2_REPLAY_PIN``).
+assigned under the Constitution at pin 1c2e920f, adoption not recorded. The Replay revision is the merge commit 93a76e28 of Replay PR cogno-us/cognous-replay-bundle#88 (#87 strict-tenant
+generation plus the decision-binding tenant_id check); it is written once (``CP2_REPLAY_PIN``).
 
 Two kinds of case, as in tests/test_current_generation.py:
 
@@ -47,7 +47,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FIX = Path(__file__).parent / "fixtures" / "cp2_generation"
 # Written out here on purpose (not read back from the importer), so a typo in the importer fails these tests.
 CP2 = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
-       "replay": "d6c05bc552e404263a149548fc3f19ecbd8203b4",  # PROVISIONAL: Replay PR #87 head d6c05bc5, to be re-pinned to the merge SHA
+       "replay": "93a76e281fcae6a65d2cd1d35376f87442dafb95",  # merge commit of Replay PR #88
        "control_plane": "484fdbd297235dd24148ddb0703f2055a31eabff",
        "moltbot_safe": "f7a55e2a8494801e49193f9f46935f0a971c248d"}
 CP2_CP_PROFILE = "control-plane-strict-tenant-stack@484fdbd2"
@@ -142,12 +142,11 @@ def test_cp2_pins_appear_in_the_importer_only_through_the_one_tuple():
     assert '"moltbot_safe": "f7a55e2a8494801e49193f9f46935f0a971c248d"}\nCP2_TRANSFORMATION_VERSION' in source
 
 
-def test_the_provisional_cp2_replay_pin_is_written_on_exactly_one_source_line_and_marked_provisional():
-    """The re-pin to the Replay #87 merge SHA touches this one source line (plus the PR-marked comment, the CHANGELOG/README rows and this file's literal)."""
+def test_the_cp2_replay_pin_is_written_on_exactly_one_source_line_and_names_its_replay_pr():
+    """A later Replay change is a new generation, not a re-tie; the pin is one source line (plus this file's literal and prose)."""
     source = Path(imp.__file__).read_text().splitlines()
     assert [n for n, line in enumerate(source, 1) if CP2["replay"] in line] == [n for n, line in enumerate(source, 1) if line.startswith("CP2_REPLAY_PIN = ")]
-    comment = "\n".join(line for line in source if line.startswith("# Strict-tenant generation (CP-2)") or line.startswith("# ") and "PR #87" in line)
-    assert "PR cogno-us/cognous-replay-bundle#87 head d6c05bc5, to be re-pinned" in "\n".join(source) and comment
+    assert "merge commit of Replay PR cogno-us/cognous-replay-bundle#88 (93a76e28" in "\n".join(source)
 
 
 def test_expected_replay_revision_is_the_cp2_pin_for_cp2_and_unchanged_for_the_others(cp2_replay_stub):
@@ -612,15 +611,46 @@ def test_a_generation_edit_to_a_retained_cp2_record_is_refused(cp2_replay, which
         _pack(bundle)
 
 
-@pytest.mark.xfail(strict=True, reason="KNOWN GAP in Replay PR #87 head d6c05bc5 (reported in the PR, not weakened here): a decision whose binding.tenant_id is edited "
-                   "(effect_id and generation unchanged) is accepted by Replay's reconstruction, so neither Replay nor the pack detects a tenant mismatch between the "
-                   "decision binding and the proposal. strict=True: this test fails the day Replay closes the gap, prompting removal of the xfail.")
+TENANT_CONFLICT = "decisions\\[0\\]\\.binding\\.tenant_id conflicts with committed operation"
+TENANT_REQUIRED = "decisions\\[0\\]\\.binding\\.generation requires a non-empty tenant_id on the binding"
+
+
+@pytest.mark.parametrize("value", ["tenant-beta", "tenant-alpha ", "TENANT-ALPHA"])
 @pytest.mark.parametrize("which", ["strict", "legacy"])
-def test_a_tenant_edit_to_a_retained_cp2_decision_binding_is_refused(cp2_replay, which):
+def test_a_tenant_edit_to_a_retained_cp2_decision_binding_is_refused(cp2_replay, which, value):
+    """Regression for the Replay #87 gap closed by Replay #88 (93a76e28): the decision binding's tenant_id must equal the proposal's. The check lives in
+    Replay (the pack re-runs Replay over the retained records), so the refusal reaches the pack as a semantic-validation failure with Replay's reason."""
     bundle = _import(cp2_replay, _strict_inputs("cp_only", which))
-    _record(bundle, "runtime_decision")["data"]["binding"]["tenant_id"] = "tenant-beta"
-    with pytest.raises(ImportContractError):
+    _record(bundle, "runtime_decision")["data"]["binding"]["tenant_id"] = value
+    with pytest.raises(ImportContractError, match=f"pinned Replay semantic validation failed: {TENANT_CONFLICT}"):
         _pack(bundle)
+
+
+@pytest.mark.parametrize("value", [None, ""], ids=["absent", "empty"])
+@pytest.mark.parametrize("which", ["strict", "legacy"])
+def test_a_missing_or_empty_tenant_on_a_retained_cp2_decision_binding_is_refused(cp2_replay, which, value):
+    bundle = _import(cp2_replay, _strict_inputs("cp_only", which))
+    binding = _record(bundle, "runtime_decision")["data"]["binding"]
+    if value is None:
+        del binding["tenant_id"]
+    else:
+        binding["tenant_id"] = value
+    with pytest.raises(ImportContractError, match=f"pinned Replay semantic validation failed: {TENANT_REQUIRED}"):
+        _pack(bundle)
+
+
+@pytest.mark.parametrize("value", ["tenant-beta", "tenant-alpha ", "TENANT-ALPHA", None, ""])
+@pytest.mark.parametrize("which", ["strict", "legacy"])
+def test_replay_itself_refuses_a_raw_cp2_run_whose_binding_tenant_disagrees_with_the_proposal(cp2_replay, which, value):
+    """The premise of the two propagation tests above, at the pinned Replay."""
+    cp, proposal, _ = _strict_inputs("cp_only", which)
+    cp = copy.deepcopy(cp)
+    if value is None:
+        del cp["decisions"][0]["binding"]["tenant_id"]
+    else:
+        cp["decisions"][0]["binding"]["tenant_id"] = value
+    with pytest.raises(cp2_replay.ImportContractError, match=TENANT_REQUIRED if value in (None, "") else TENANT_CONFLICT):
+        cp2_replay.import_bounded_workflow(cp, proposal=proposal, moltbot_export=None, control_plane_revision=CP2["control_plane"])
 
 
 def test_a_strict_tenant_record_is_accepted_by_replay_under_every_security_label_so_the_label_is_the_only_generation_evidence(cp2_replay):

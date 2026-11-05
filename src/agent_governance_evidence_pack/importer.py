@@ -115,12 +115,12 @@ CUR_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.9-current-
 # Control Plane #109), the UNCHANGED CUR runtime f7a55e2a and Manifest fa170815 (both written as literals here, so a later CUR re-tie cannot silently move this generation),
 # and the Replay revision below. One exact tuple keyed by the Control Plane revision, never a range, prefix, wildcard or "latest". The runtime is shared with CUR, so the
 # Control Plane label (not the runtime revision) distinguishes the two generations. PROVISIONAL DEVELOPMENT PIN, UNQUALIFIED, non-authorizing: assigned under the
-# Constitution at pin 1c2e920f, adoption not recorded. The Replay revision is PROVISIONAL: Replay PR cogno-us/cognous-replay-bundle#87 head d6c05bc5, to be re-pinned to
-# the #87 merge commit once it has merged and review is clear (CP2_REPLAY_PIN is the only place it is written). Supported scope: the plain bounded run (strict and
+# Constitution at pin 1c2e920f, adoption not recorded. The Replay revision is the merge commit of Replay PR cogno-us/cognous-replay-bundle#88 (93a76e28: #87 strict-tenant generation plus the
+# decision-binding tenant_id check); CP2_REPLAY_PIN is the only place it is written. Supported scope: the plain bounded run (strict and
 # legacy tenant-aware effect identity are recomputed only by Replay). NOT supported, refused through Replay: the Registry-governed and authenticated-selection profiles,
 # runtime_authority.effective_configuration, the policy-binding members, reason vocabulary 0.3, selection_refusal and authorization_pin evidence.
 # Provenance labels remain caller-asserted: the Control Plane label is declared by the caller and is not measured against a Control Plane checkout.
-CP2_REPLAY_PIN = "d6c05bc552e404263a149548fc3f19ecbd8203b4"
+CP2_REPLAY_PIN = "93a76e281fcae6a65d2cd1d35376f87442dafb95"
 CP2_REVISIONS = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
     "replay": CP2_REPLAY_PIN,
     "control_plane": "484fdbd297235dd24148ddb0703f2055a31eabff",

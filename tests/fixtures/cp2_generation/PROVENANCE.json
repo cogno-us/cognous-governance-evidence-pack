@@ -13,7 +13,7 @@
   "python": "3.13",
   "runtime": "f7a55e2a8494801e49193f9f46935f0a971c248d"
  },
- "replay_contract": "cogno-us/cognous-replay-bundle PR #87 head d6c05bc552e404263a149548fc3f19ecbd8203b4 (to be re-pinned to the merge SHA); generation id control-plane-strict-tenant-stack@484fdbd2",
+ "replay_contract": "cogno-us/cognous-replay-bundle PR #88 merge commit 93a76e281fcae6a65d2cd1d35376f87442dafb95 (#87 strict-tenant generation plus the decision-binding tenant_id check); the strict_tenant_cp_only files and scripts were re-verified byte-identical to that revision's tests/fixtures/strict_tenant_generation; generation id control-plane-strict-tenant-stack@484fdbd2",
  "scripts_sha256": {
   "capture_current.py": "267dd509d9e16b54396d3791f29b6e4009fd829ea88d56e02bfdb7d99d14e07f",
   "capture_paired.py": "2adb25ae5977b559d23c50bb660db7b2991a808a811e7b18e6c5ce5ead820792",

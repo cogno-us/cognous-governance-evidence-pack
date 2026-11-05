@@ -59,7 +59,7 @@ jobs:
         AGEP_CUR_REPLAY_SOURCE: ${{ runner.temp }}/replay-source
         AGEP_REQUIRE_CUR_E2E: '1'
   cp2-generation-e2e:
-    # Strict-tenant (CP-2) end-to-end tests against the real Replay at CP2_REPLAY_PIN (PROVISIONAL until re-pinned to the Replay #87 merge commit).
+    # Strict-tenant (CP-2) end-to-end tests against the real Replay at CP2_REPLAY_PIN (the merge commit of Replay #88).
     # Separate from `native` (its `replay` extra installs the P2 Replay, whose distribution metadata would shadow this checkout) and from
     # `current-generation-e2e` (CUR keeps its own Replay pin, unchanged); a missing or shadowed Replay fails here (AGEP_REQUIRE_CP2_E2E=1) rather than skipping.
     name: CP-2 strict-tenant end-to-end (Replay at the pin)
