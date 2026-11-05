@@ -111,14 +111,30 @@ CUR_REVISIONS = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
     "control_plane": "b19c47ddd020409d24e52e70b11359c46265edbb",
     "moltbot_safe": "f7a55e2a8494801e49193f9f46935f0a971c248d"}
 CUR_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.9-current-stack-candidate"
+# Strict-tenant generation (CP-2), added BESIDE the current generation (CUR is not moved, re-tied or edited): Control Plane 484fdbd2 (strict tenant-aware effect identity,
+# Control Plane #109), the UNCHANGED CUR runtime f7a55e2a and Manifest fa170815 (both written as literals here, so a later CUR re-tie cannot silently move this generation),
+# and the Replay revision below. One exact tuple keyed by the Control Plane revision, never a range, prefix, wildcard or "latest". The runtime is shared with CUR, so the
+# Control Plane label (not the runtime revision) distinguishes the two generations. PROVISIONAL DEVELOPMENT PIN, UNQUALIFIED, non-authorizing: assigned under the
+# Constitution at pin 1c2e920f, adoption not recorded. The Replay revision is PROVISIONAL: Replay PR cogno-us/cognous-replay-bundle#87 head d6c05bc5, to be re-pinned to
+# the #87 merge commit once it has merged and review is clear (CP2_REPLAY_PIN is the only place it is written). Supported scope: the plain bounded run (strict and
+# legacy tenant-aware effect identity are recomputed only by Replay). NOT supported, refused through Replay: the Registry-governed and authenticated-selection profiles,
+# runtime_authority.effective_configuration, the policy-binding members, reason vocabulary 0.3, selection_refusal and authorization_pin evidence.
+# Provenance labels remain caller-asserted: the Control Plane label is declared by the caller and is not measured against a Control Plane checkout.
+CP2_REPLAY_PIN = "d6c05bc552e404263a149548fc3f19ecbd8203b4"
+CP2_REVISIONS = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
+    "replay": CP2_REPLAY_PIN,
+    "control_plane": "484fdbd297235dd24148ddb0703f2055a31eabff",
+    "moltbot_safe": "f7a55e2a8494801e49193f9f46935f0a971c248d"}
+CP2_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.10-strict-tenant-candidate"
 SECURITY_RUNTIME_GENERATIONS = {
     SECURITY_REVISIONS["control_plane"]: (SECURITY_REVISIONS, SECURITY_TRANSFORMATION_VERSION),
     F5B_REVISIONS["control_plane"]: (F5B_REVISIONS, F5B_TRANSFORMATION_VERSION),
     P4_REVISIONS["control_plane"]: (P4_REVISIONS, P4_TRANSFORMATION_VERSION),
     P2_REVISIONS["control_plane"]: (P2_REVISIONS, P2_TRANSFORMATION_VERSION),
     CUR_REVISIONS["control_plane"]: (CUR_REVISIONS, CUR_TRANSFORMATION_VERSION),
+    CP2_REVISIONS["control_plane"]: (CP2_REVISIONS, CP2_TRANSFORMATION_VERSION),
 }
-ALL_CONTROL_PLANE_V2_REVISIONS = (*CONTROL_PLANE_V2_REVISIONS, MERGED_REVISIONS["control_plane"], REFUSAL_REVISIONS["control_plane"], RUNTIME_AUTHORITY_REVISIONS["control_plane"], SECURITY_REVISIONS["control_plane"], F5B_REVISIONS["control_plane"], P4_REVISIONS["control_plane"], P2_REVISIONS["control_plane"], CUR_REVISIONS["control_plane"])
+ALL_CONTROL_PLANE_V2_REVISIONS = (*CONTROL_PLANE_V2_REVISIONS, MERGED_REVISIONS["control_plane"], REFUSAL_REVISIONS["control_plane"], RUNTIME_AUTHORITY_REVISIONS["control_plane"], SECURITY_REVISIONS["control_plane"], F5B_REVISIONS["control_plane"], P4_REVISIONS["control_plane"], P2_REVISIONS["control_plane"], CUR_REVISIONS["control_plane"], CP2_REVISIONS["control_plane"])
 SUPPORTED_REVISION_SETS = {
     "manifest": [MANIFEST_REVISION],
     "replay": [REPLAY_REVISION, V2_REVISIONS["replay"], ACCEPTED_REPLAY_PERSISTENCE_REVISION, MERGED_REVISIONS["replay"]],
@@ -167,7 +183,7 @@ def _is_persistence_v2(bundle: dict[str, Any]) -> bool:
     return _selected_control_plane_revision(bundle) in (CONTROL_PLANE_V2_PERSISTENCE_REVISION, MERGED_REVISIONS["control_plane"])
 
 
-def _accepted_replay_v2_profiles(*, require_persistence: bool = False, require_merged: bool = False, require_refusal: bool = False, require_authority: bool = False, require_security: bool = False, require_f5b: bool = False, require_p4: bool = False, require_p2: bool = False, require_cur: bool = False) -> dict[str, str]:
+def _accepted_replay_v2_profiles(*, require_persistence: bool = False, require_merged: bool = False, require_refusal: bool = False, require_authority: bool = False, require_security: bool = False, require_f5b: bool = False, require_p4: bool = False, require_p2: bool = False, require_cur: bool = False, require_cp2: bool = False) -> dict[str, str]:
     try:
         from agent_replay_bundle.importers import (
             BOUNDED_V2_PROFILE,
@@ -276,14 +292,26 @@ def _accepted_replay_v2_profiles(*, require_persistence: bool = False, require_m
                 or MANIFEST_CUR_REVISION != CUR_REVISIONS["manifest"]):
             raise ImportContractError("current-generation source mapping contradicts Evidence Pack contract")
         mapping[CONTROL_PLANE_CUR_REVISION] = BOUNDED_CUR_PROFILE
+    if require_cp2:
+        try:
+            from agent_replay_bundle.importers import (CONTROL_PLANE_STRICT_TENANT_REVISION,
+                MOLTBOT_CUR_REVISION as MOLTBOT_CP2_REVISION, MANIFEST_CUR_REVISION as MANIFEST_CP2_REVISION, BOUNDED_STRICT_TENANT_PROFILE)
+        except ImportError as exc:
+            raise ImportContractError("CP-2 generation Replay mapping unavailable") from exc
+        # Replay names the runtime and Manifest of this generation through its CUR constants (the generation reuses both unchanged).
+        if (CONTROL_PLANE_STRICT_TENANT_REVISION != CP2_REVISIONS["control_plane"]
+                or MOLTBOT_CP2_REVISION != CP2_REVISIONS["moltbot_safe"]
+                or MANIFEST_CP2_REVISION != CP2_REVISIONS["manifest"]):
+            raise ImportContractError("CP-2 generation source mapping contradicts Evidence Pack contract")
+        mapping[CONTROL_PLANE_STRICT_TENANT_REVISION] = BOUNDED_STRICT_TENANT_PROFILE
     return mapping
 
 
 REQUIRED_REPOS = {
-    "cogno-us/cognous-agent-action-manifest": {MANIFEST_REVISION, SECURITY_REVISIONS["manifest"], F5B_REVISIONS["manifest"], P4_REVISIONS["manifest"], P2_REVISIONS["manifest"], CUR_REVISIONS["manifest"]},
-    "cogno-us/cognous-agent-replay-bundle": {REPLAY_REVISION, V2_REVISIONS["replay"], ACCEPTED_REPLAY_PERSISTENCE_REVISION, MERGED_REVISIONS["replay"], REFUSAL_REVISIONS["replay"], RUNTIME_AUTHORITY_REVISIONS["replay"], SECURITY_REVISIONS["replay"], F5B_REVISIONS["replay"], P4_REVISIONS["replay"], P2_REVISIONS["replay"], CUR_REVISIONS["replay"]},
+    "cogno-us/cognous-agent-action-manifest": {MANIFEST_REVISION, SECURITY_REVISIONS["manifest"], F5B_REVISIONS["manifest"], P4_REVISIONS["manifest"], P2_REVISIONS["manifest"], CUR_REVISIONS["manifest"], CP2_REVISIONS["manifest"]},
+    "cogno-us/cognous-agent-replay-bundle": {REPLAY_REVISION, V2_REVISIONS["replay"], ACCEPTED_REPLAY_PERSISTENCE_REVISION, MERGED_REVISIONS["replay"], REFUSAL_REVISIONS["replay"], RUNTIME_AUTHORITY_REVISIONS["replay"], SECURITY_REVISIONS["replay"], F5B_REVISIONS["replay"], P4_REVISIONS["replay"], P2_REVISIONS["replay"], CUR_REVISIONS["replay"], CP2_REVISIONS["replay"]},
     "cogno-us/cognous-agent-control-plane": {CONTROL_PLANE_REVISION, *ALL_CONTROL_PLANE_V2_REVISIONS},
-    "cogno-us/moltbot-safe": {LEGACY_MOLTBOT_SAFE_REVISION, MOLTBOT_SAFE_REVISION, V2_REVISIONS["moltbot_safe"], MERGED_REVISIONS["moltbot_safe"], REFUSAL_REVISIONS["moltbot_safe"], RUNTIME_AUTHORITY_REVISIONS["moltbot_safe"], SECURITY_REVISIONS["moltbot_safe"], F5B_REVISIONS["moltbot_safe"], P4_REVISIONS["moltbot_safe"], P2_REVISIONS["moltbot_safe"], CUR_REVISIONS["moltbot_safe"]},
+    "cogno-us/moltbot-safe": {LEGACY_MOLTBOT_SAFE_REVISION, MOLTBOT_SAFE_REVISION, V2_REVISIONS["moltbot_safe"], MERGED_REVISIONS["moltbot_safe"], REFUSAL_REVISIONS["moltbot_safe"], RUNTIME_AUTHORITY_REVISIONS["moltbot_safe"], SECURITY_REVISIONS["moltbot_safe"], F5B_REVISIONS["moltbot_safe"], P4_REVISIONS["moltbot_safe"], P2_REVISIONS["moltbot_safe"], CUR_REVISIONS["moltbot_safe"], CP2_REVISIONS["moltbot_safe"]},
     "cogno-us/constitutional-governance-for-institutions": {ALVORADA_REVISION},
 }
 EXECUTION_TYPES = {"execution_envelope", "execution_result", "destination_attempt", "destination_attempt_event", "destination_effect", "executor_observation", "executor_recovery_report", "executor_export_extensions", "moltbot_attributed_control_plane_attempt"}
@@ -511,8 +539,8 @@ def _validate_headers(manifest: dict[str, Any], bundle: dict[str, Any]) -> tuple
         revision = profile.get("revision")
         if repo in REQUIRED_REPOS and revision not in ({None} | REQUIRED_REPOS[repo]):
             raise ImportContractError(f"producer_profiles[{index}].revision for {repo} conflicts with pinned supported revision")
-        if repo == "cogno-us/moltbot-safe" and revision in (*PRODUCER_REVISIONS.values(), MERGED_REVISIONS["moltbot_safe"], REFUSAL_REVISIONS["moltbot_safe"], RUNTIME_AUTHORITY_REVISIONS["moltbot_safe"], SECURITY_REVISIONS["moltbot_safe"], F5B_REVISIONS["moltbot_safe"], P4_REVISIONS["moltbot_safe"], P2_REVISIONS["moltbot_safe"], CUR_REVISIONS["moltbot_safe"]):
-            version = "2.0.0" if revision in (MERGED_REVISIONS["moltbot_safe"], REFUSAL_REVISIONS["moltbot_safe"], RUNTIME_AUTHORITY_REVISIONS["moltbot_safe"], SECURITY_REVISIONS["moltbot_safe"], F5B_REVISIONS["moltbot_safe"], P4_REVISIONS["moltbot_safe"], P2_REVISIONS["moltbot_safe"], CUR_REVISIONS["moltbot_safe"]) else next(v for v, rev in PRODUCER_REVISIONS.items() if rev == revision)
+        if repo == "cogno-us/moltbot-safe" and revision in (*PRODUCER_REVISIONS.values(), MERGED_REVISIONS["moltbot_safe"], REFUSAL_REVISIONS["moltbot_safe"], RUNTIME_AUTHORITY_REVISIONS["moltbot_safe"], SECURITY_REVISIONS["moltbot_safe"], F5B_REVISIONS["moltbot_safe"], P4_REVISIONS["moltbot_safe"], P2_REVISIONS["moltbot_safe"], CUR_REVISIONS["moltbot_safe"], CP2_REVISIONS["moltbot_safe"]):
+            version = "2.0.0" if revision in (MERGED_REVISIONS["moltbot_safe"], REFUSAL_REVISIONS["moltbot_safe"], RUNTIME_AUTHORITY_REVISIONS["moltbot_safe"], SECURITY_REVISIONS["moltbot_safe"], F5B_REVISIONS["moltbot_safe"], P4_REVISIONS["moltbot_safe"], P2_REVISIONS["moltbot_safe"], CUR_REVISIONS["moltbot_safe"], CP2_REVISIONS["moltbot_safe"]) else next(v for v, rev in PRODUCER_REVISIONS.items() if rev == revision)
             if profile.get("format_version") != version:
                 raise ImportContractError(f"versioned Moltbot producer revision requires executor producer profile {version}")
             expected_profile = f"moltbot-safe-executor-producer-{version}@{revision[:8]}"
@@ -521,7 +549,7 @@ def _validate_headers(manifest: dict[str, Any], bundle: dict[str, Any]) -> tuple
                     "versioned Moltbot producer revision requires accepted Replay producer profile identity"
                 )
         if repo == "cogno-us/cognous-agent-control-plane" and revision in ALL_CONTROL_PLANE_V2_REVISIONS:
-            expected_profile = _accepted_replay_v2_profiles(require_persistence=revision in (CONTROL_PLANE_V2_PERSISTENCE_REVISION, MERGED_REVISIONS["control_plane"]), require_merged=revision == MERGED_REVISIONS["control_plane"], require_refusal=revision == REFUSAL_REVISIONS["control_plane"], require_authority=revision == RUNTIME_AUTHORITY_REVISIONS["control_plane"], require_security=revision == SECURITY_REVISIONS["control_plane"], require_f5b=revision == F5B_REVISIONS["control_plane"], require_p4=revision == P4_REVISIONS["control_plane"], require_p2=revision == P2_REVISIONS["control_plane"], require_cur=revision == CUR_REVISIONS["control_plane"])[revision]
+            expected_profile = _accepted_replay_v2_profiles(require_persistence=revision in (CONTROL_PLANE_V2_PERSISTENCE_REVISION, MERGED_REVISIONS["control_plane"]), require_merged=revision == MERGED_REVISIONS["control_plane"], require_refusal=revision == REFUSAL_REVISIONS["control_plane"], require_authority=revision == RUNTIME_AUTHORITY_REVISIONS["control_plane"], require_security=revision == SECURITY_REVISIONS["control_plane"], require_f5b=revision == F5B_REVISIONS["control_plane"], require_p4=revision == P4_REVISIONS["control_plane"], require_p2=revision == P2_REVISIONS["control_plane"], require_cur=revision == CUR_REVISIONS["control_plane"], require_cp2=revision == CP2_REVISIONS["control_plane"])[revision]
             if profile.get("profile_id") != expected_profile:
                 raise ImportContractError(
                     "Control Plane producer profile identity contradicts accepted Replay revision/profile mapping"
@@ -537,19 +565,23 @@ def _validate_headers(manifest: dict[str, Any], bundle: dict[str, Any]) -> tuple
 
 def _check_security_generation_pairing(bundle: dict[str, Any], profiles: list[Any]) -> None:
     """Reject bundles that mix revisions from different security-runtime generations."""
-    executor_generation = {revisions["moltbot_safe"]: cp for cp, (revisions, _) in SECURITY_RUNTIME_GENERATIONS.items()}
+    # Runtime revision -> the SET of Control Plane generations it is paired with. CUR and CP-2 share runtime f7a55e2a, so a single-valued map
+    # (the later generation overwriting the earlier) would refuse every CUR bundle; the Control Plane label disambiguates the generations.
+    executor_generations: dict[str, set[str]] = defaultdict(set)
+    for cp, (revisions, _) in SECURITY_RUNTIME_GENERATIONS.items():
+        executor_generations[revisions["moltbot_safe"]].add(cp)
     selected = _selected_control_plane_revision(bundle)
     for profile in profiles:
         if profile.get("repository") != "cogno-us/moltbot-safe" or profile.get("revision") is None:
             continue
-        paired = executor_generation.get(profile.get("revision"))
-        if (paired is not None and paired != selected) or (_is_security(bundle) and paired is None):
+        paired = executor_generations.get(profile.get("revision"))
+        if (paired is not None and selected not in paired) or (_is_security(bundle) and paired is None):
             raise ImportContractError("executor producer revision is not paired with the selected security-runtime Control Plane generation")
     if _is_security(bundle):
         manifest_revision = (bundle.get("metadata") or {}).get("manifest_revision")
         if manifest_revision is not None and manifest_revision != _security_revisions(bundle)["manifest"]:
             raise ImportContractError("Manifest revision is not paired with the selected security-runtime Control Plane generation")
-    if selected == CUR_REVISIONS["control_plane"]:
+    if selected in (CUR_REVISIONS["control_plane"], CP2_REVISIONS["control_plane"]):
         _check_current_generation_metadata(bundle, profiles)
 
 
@@ -565,18 +597,19 @@ CUR_EXECUTOR_FAILURE_REFERENCE_VERIFICATION = "source_asserted_not_independently
 
 
 def _check_current_generation_metadata(bundle: dict[str, Any], profiles: list[Any]) -> None:
-    """Current generation only: refuse governed (E1) metadata labels and require the generation's own revision labels.
+    """Current generation (CUR) and strict-tenant generation (CP-2) only: refuse governed (E1) metadata labels and require the selected generation's own revision labels.
 
     The Pack does not support the Registry-governed profile, so a bundle must not carry its labels into retained sources.
     No unknown-key rejection beyond these checks (provenance labels remain caller-asserted).
     """
     metadata = bundle.get("metadata") or {}
+    generation = _security_revisions(bundle)  # the selected generation's own labels (CUR or CP-2), never a hard-coded generation
     for key in ("control_plane_profile", "effective_configuration_verification"):
         if key in metadata:
             raise ImportContractError(f"metadata.{key} is a governed-profile label and is unsupported under the current generation")
     if _contains_key(metadata, "effective_configuration"):
         raise ImportContractError("metadata carries effective_configuration, which is unsupported under the current generation")
-    if metadata.get("manifest_revision") != CUR_REVISIONS["manifest"]:
+    if metadata.get("manifest_revision") != generation["manifest"]:
         raise ImportContractError("metadata.manifest_revision must be present and equal to the current-generation Manifest revision")
     if metadata.get("executor_failure_reference_verification") != CUR_EXECUTOR_FAILURE_REFERENCE_VERIFICATION:
         raise ImportContractError(
@@ -584,7 +617,7 @@ def _check_current_generation_metadata(bundle: dict[str, Any], profiles: list[An
             f"{CUR_EXECUTOR_FAILURE_REFERENCE_VERIFICATION!r} under the current generation"
         )
     has_executor = any(isinstance(p, dict) and p.get("repository") == "cogno-us/moltbot-safe" for p in profiles)
-    expected_executor = CUR_REVISIONS["moltbot_safe"] if has_executor else None
+    expected_executor = generation["moltbot_safe"] if has_executor else None
     if metadata.get("moltbot_safe_revision") != expected_executor:
         raise ImportContractError("metadata.moltbot_safe_revision is not paired with the current-generation Control Plane")
 
@@ -783,7 +816,7 @@ def _expected_replay_revision(bundle: dict[str, Any]) -> str:
     """The Replay revision the selected producer generation names (the one whose validator may be trusted for it)."""
     revision = _selected_control_plane_revision(bundle)
     for generation in (V2_REVISIONS, PERSISTENCE_REVISIONS, MERGED_REVISIONS, REFUSAL_REVISIONS, RUNTIME_AUTHORITY_REVISIONS,
-                       SECURITY_REVISIONS, F5B_REVISIONS, P4_REVISIONS, P2_REVISIONS, CUR_REVISIONS):
+                       SECURITY_REVISIONS, F5B_REVISIONS, P4_REVISIONS, P2_REVISIONS, CUR_REVISIONS, CP2_REVISIONS):
         if generation["control_plane"] == revision:
             return generation["replay"]
     return REPLAY_REVISION
@@ -958,7 +991,7 @@ def _run_pinned_replay_validator(bundle: dict[str, Any]) -> str:
             raise ImportContractError("unsupported Control Plane revision")
         _require_pinned_replay_distribution(_expected_replay_revision(bundle))
         if _is_v2(bundle):
-            replay_profiles = _accepted_replay_v2_profiles(require_persistence=revision in (CONTROL_PLANE_V2_PERSISTENCE_REVISION, MERGED_REVISIONS["control_plane"]), require_merged=revision == MERGED_REVISIONS["control_plane"], require_refusal=revision == REFUSAL_REVISIONS["control_plane"], require_authority=revision == RUNTIME_AUTHORITY_REVISIONS["control_plane"], require_security=revision == SECURITY_REVISIONS["control_plane"], require_f5b=revision == F5B_REVISIONS["control_plane"], require_p4=revision == P4_REVISIONS["control_plane"], require_p2=revision == P2_REVISIONS["control_plane"], require_cur=revision == CUR_REVISIONS["control_plane"])
+            replay_profiles = _accepted_replay_v2_profiles(require_persistence=revision in (CONTROL_PLANE_V2_PERSISTENCE_REVISION, MERGED_REVISIONS["control_plane"]), require_merged=revision == MERGED_REVISIONS["control_plane"], require_refusal=revision == REFUSAL_REVISIONS["control_plane"], require_authority=revision == RUNTIME_AUTHORITY_REVISIONS["control_plane"], require_security=revision == SECURITY_REVISIONS["control_plane"], require_f5b=revision == F5B_REVISIONS["control_plane"], require_p4=revision == P4_REVISIONS["control_plane"], require_p2=revision == P2_REVISIONS["control_plane"], require_cur=revision == CUR_REVISIONS["control_plane"], require_cp2=revision == CP2_REVISIONS["control_plane"])
             cp_profile = next(
                 (p for p in bundle.get("producer_profiles", [])
                  if isinstance(p, dict) and p.get("repository") == "cogno-us/cognous-agent-control-plane"),

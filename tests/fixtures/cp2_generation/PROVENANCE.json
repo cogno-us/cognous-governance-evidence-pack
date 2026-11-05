@@ -1,0 +1,63 @@
+{
+ "directories": {
+  "paired": "the four paired scenarios (adapter-default, adapter-operation-identity, atomic-default, atomic-operation-key): control_plane_run.json, proposal.json, executor.json; capture_paired.py; the four proposals are byte-identical to tests/fixtures/current_generation proposals (tenantless records: the CP-2 and CUR record shapes are equal)",
+  "scenarios": "lost_ack (executed after a lost acknowledgement, reconciled), race (failed, effective grant changed between decision and commit), revoked (denied, grant_revoked), tampered_evidence (denied, evidence_signature_invalid): control_plane_run.json, proposal.json, runtime_export.json; capture_current.py",
+  "strict_tenant_cp_only": "strict and legacy tenant-aware Control Plane run records and proposals WITHOUT a runtime export; byte copies of Replay PR #87 tests/fixtures/strict_tenant_generation (sha256 equal to that PROVENANCE.json); generate_from_cp.py is Replay's script",
+  "strict_tenant_runtime_denied": "strict and legacy tenant-aware runs driven THROUGH the runtime executor (capture_strict_tenant_runtime.py). Observed: the runtime refuses the tenant-aware operation with 'runtime proposal mismatch: tenant_id' (its ExecutionOperation carries no tenant), so each export is a genuine DENIED export retaining the Control Plane effect identity. No EXECUTED strict-tenant runtime export exists at these revisions; strict-tenant execution through the runtime path is NOT verified."
+ },
+ "manifest": "manifest.json is a byte copy of tests/fixtures/current_generation/manifest.json (action manifest fa170815 did not change)",
+ "producer": {
+  "control_plane": "484fdbd297235dd24148ddb0703f2055a31eabff",
+  "manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
+  "note": "STRICT-TENANT GENERATION (CP-2), PROVISIONAL DEVELOPMENT PIN, UNQUALIFIED, non-authorizing; assigned under the Constitution at pin 1c2e920f, adoption not recorded. Plain bounded run only.",
+  "python": "3.13",
+  "runtime": "f7a55e2a8494801e49193f9f46935f0a971c248d"
+ },
+ "replay_contract": "cogno-us/cognous-replay-bundle PR #87 head d6c05bc552e404263a149548fc3f19ecbd8203b4 (to be re-pinned to the merge SHA); generation id control-plane-strict-tenant-stack@484fdbd2",
+ "scripts_sha256": {
+  "capture_current.py": "267dd509d9e16b54396d3791f29b6e4009fd829ea88d56e02bfdb7d99d14e07f",
+  "capture_paired.py": "2adb25ae5977b559d23c50bb660db7b2991a808a811e7b18e6c5ce5ead820792",
+  "capture_strict_tenant_runtime.py": "b84e4a9386e843496a72c5d1db7fe9a77fc55693dc5a5dbc7beabf1e0222c7a4",
+  "strict_tenant_cp_only/generate_from_cp.py": "97b53c1f743cf42b33081c5374ef7b7fec0275645bd8297d8d61774a1a9cc489"
+ },
+ "sha256": {
+  "manifest.json": "2de33f6fd0936ec56013a5eddb99c8c4a2943ab463f8ee9c3898780a8da20e58",
+  "paired/adapter-default/control_plane_run.json": "379cc0491f8bfd368b0c01f87d5afbba1421b4c761f2b1be6010eb6cd0072ace",
+  "paired/adapter-default/executor.json": "4d7b1f128f2a022e8980fe8642b3ae459d327183abec4c03b4d907595e319662",
+  "paired/adapter-default/proposal.json": "ae6f275c3f5a8fb417b74c7907bff014da6aa09b92e9839973dc86345de1c973",
+  "paired/adapter-operation-identity/control_plane_run.json": "dbe84d00ff045fb1ab7c09ddc4a6634ced2d3127c611af76b06eaaa609ee5bfa",
+  "paired/adapter-operation-identity/executor.json": "5124049f66a7380aea79d7863c568a1720dcd3a102167ab1945be0f8bb62aa2d",
+  "paired/adapter-operation-identity/proposal.json": "ae6f275c3f5a8fb417b74c7907bff014da6aa09b92e9839973dc86345de1c973",
+  "paired/atomic-default/control_plane_run.json": "5fe7e9d9aa918aec80b1954d3e50048afe33c757c2a0ea3ff2a79fad79ff066c",
+  "paired/atomic-default/executor.json": "5b370b5d24d1b27119a798b06df0c9e0aae5b808f33bfc35f0c5379cb372ec68",
+  "paired/atomic-default/proposal.json": "ae6f275c3f5a8fb417b74c7907bff014da6aa09b92e9839973dc86345de1c973",
+  "paired/atomic-operation-key/control_plane_run.json": "df2ba719a8ee24fb65aafed56635ce458faafa83c69d0f8f7e6eeadef1ece339",
+  "paired/atomic-operation-key/executor.json": "372c24eb78d24c6d9b7cc1a41e2b79e177a7747ad2c77b8ffe619a096b8613e2",
+  "paired/atomic-operation-key/proposal.json": "ae6f275c3f5a8fb417b74c7907bff014da6aa09b92e9839973dc86345de1c973",
+  "scenarios/lost_ack/control_plane_run.json": "b61c7e17cbe57cefa3b8919bd28fabb3f59b2dcbfdc9667e6687d532bf7ece0c",
+  "scenarios/lost_ack/proposal.json": "b1f88834ead411d01d7387271ea8d5465c2a0cbba452065ac3771974b17590bf",
+  "scenarios/lost_ack/runtime_export.json": "9c6c0b9f1f97ea52e0bc452800ada5d262986ffa4edff757cee109805b2cd1eb",
+  "scenarios/race/control_plane_run.json": "503a4873ff683458c977881a9d127a29e9229f5df18a347c3afb50383d08fcc0",
+  "scenarios/race/proposal.json": "b1f88834ead411d01d7387271ea8d5465c2a0cbba452065ac3771974b17590bf",
+  "scenarios/race/runtime_export.json": "b91ef726740ef43e4b6443c9466cb8cc646bd3e1cd371ec70602b697aa4bc22e",
+  "scenarios/revoked/control_plane_run.json": "c7501506e0f8dd2ad70a7667f2d61b81fc364b0f1e891564973b9563d79fa934",
+  "scenarios/revoked/proposal.json": "b1f88834ead411d01d7387271ea8d5465c2a0cbba452065ac3771974b17590bf",
+  "scenarios/revoked/runtime_export.json": "5029efc77a49090c07752711d56ebf4331bbca6308ec733ae96babe4b993ef70",
+  "scenarios/tampered_evidence/control_plane_run.json": "1c9b4fe10471972a835fd433b1889c55ff58e9a394e972fc1b909b643e4054d8",
+  "scenarios/tampered_evidence/proposal.json": "b1f88834ead411d01d7387271ea8d5465c2a0cbba452065ac3771974b17590bf",
+  "scenarios/tampered_evidence/runtime_export.json": "95f812adcf77e5faed65cff7c70e32abc86cbac20b1644ad4fc6a35a1aef0683",
+  "strict_tenant_cp_only/legacy_control_plane_run.json": "8059fff932f5e0d1c98e67071bded26d6923150852273539d8bfc22cdc7a8d2d",
+  "strict_tenant_cp_only/legacy_proposal.json": "d43ac343139f8c9393ddca4746961d1fc7a4e05bafa5a6c5f446157a53e5178d",
+  "strict_tenant_cp_only/strict_control_plane_run.json": "724d2570990fc3b0db0b5168bb8fa4a12df1d08731f9dbcf58495c3989e507ee",
+  "strict_tenant_cp_only/strict_proposal.json": "d43ac343139f8c9393ddca4746961d1fc7a4e05bafa5a6c5f446157a53e5178d",
+  "strict_tenant_cp_only/vectors.json": "e7d560862639df3a0059fad36a4165e7b21703c7a3b456bf4ae44c865dd0b254",
+  "strict_tenant_runtime_denied/legacy/control_plane_run.json": "584159334d888cbf0ff68c0e03e47766f5294941ae770dc3eafca703ac097822",
+  "strict_tenant_runtime_denied/legacy/proposal.json": "d43ac343139f8c9393ddca4746961d1fc7a4e05bafa5a6c5f446157a53e5178d",
+  "strict_tenant_runtime_denied/legacy/runtime_export.json": "6b795e8b9d4eb4f2921a95abaa3f90a0e3f0ded22a7986e2f2975fcd91d266f6",
+  "strict_tenant_runtime_denied/strict/control_plane_run.json": "0324997ac0eb4aa3767a7cc22afbd577860a20ab8b815247d5b89a38d8c60098",
+  "strict_tenant_runtime_denied/strict/proposal.json": "d43ac343139f8c9393ddca4746961d1fc7a4e05bafa5a6c5f446157a53e5178d",
+  "strict_tenant_runtime_denied/strict/runtime_export.json": "004f36eff42760f7c238400255c580fe75027e600ef052a09884d9d55c855482"
+ },
+ "source": "Real exports captured on 2026-11-05 from PRISTINE shallow checkouts of Control Plane 484fdbd297235dd24148ddb0703f2055a31eabff (strict-tenant generation, CP #109) and runtime f7a55e2a8494801e49193f9f46935f0a971c248d, with the capture scripts vendored beside the data (capture_current.py and capture_paired.py are byte copies of the Replay PR #87 head scripts; capture_strict_tenant_runtime.py is this repository's). Synthetic data, throwaway stores, nothing hand-edited. These are NEW captures against CP-2; the CUR fixtures in tests/fixtures/current_generation are untouched and were NOT relabelled.",
+ "used_by": "tests/test_cp2_generation.py (end to end against a scratch clone of Replay at CP2_REPLAY_PIN when AGEP_CP2_REPLAY_SOURCE is set; skipped when unset unless AGEP_REQUIRE_CP2_E2E=1; the CI job cp2-generation-e2e sets both)"
+}
