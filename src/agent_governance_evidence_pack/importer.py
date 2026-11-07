@@ -126,6 +126,21 @@ CP2_REVISIONS = {"manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b",
     "control_plane": "484fdbd297235dd24148ddb0703f2055a31eabff",
     "moltbot_safe": "f7a55e2a8494801e49193f9f46935f0a971c248d"}
 CP2_TRANSFORMATION_VERSION = "agep-manifest-reconstruction-import/0.3.10-strict-tenant-candidate"
+# S2 compatibility candidate (DEVELOPMENT ONLY, UNQUALIFIED, NOT ADOPTED, explicit opt-in ONLY). The CP2 generation above is NOT changed: it keeps its exact Replay pin. This registry
+# adds ONE additional exact Replay revision for the SAME Control Plane / Runtime / Manifest tuple (taken by reference from CP2_REVISIONS): the main merge commit of Replay PR
+# cogno-us/cognous-replay-bundle#89 (executor operation tenant must equal the proposal tenant). A bundle carries no Replay revision, and generations are keyed by the Control Plane
+# revision, so the candidate cannot be keyed by it: the caller declares it with the keyword-only ``replay_generation`` argument (default None = unchanged behaviour), the declaration is
+# recorded in the pack and re-derived by the validator. It is never selected by default, by a newer installed Replay, a branch name, a prefix or a wildcard. Provenance of the Replay
+# revision is the installed checkout's git HEAD (clean tracked files), not an authenticated claim.
+CP2_REPLAY_CANDIDATES = {
+    "cp2-replay-7eb7d76e-tenant-binding-dev-0.1": {
+        "replay": "7eb7d76eda10ca1ff997bb86853e903e57da625c",
+        "control_plane": CP2_REVISIONS["control_plane"],
+        "moltbot_safe": CP2_REVISIONS["moltbot_safe"],
+        "manifest": CP2_REVISIONS["manifest"],
+        "transformation_version": "agep-manifest-reconstruction-import/0.3.11-strict-tenant-replay-7eb7d76e-dev-candidate",
+    },
+}
 SECURITY_RUNTIME_GENERATIONS = {
     SECURITY_REVISIONS["control_plane"]: (SECURITY_REVISIONS, SECURITY_TRANSFORMATION_VERSION),
     F5B_REVISIONS["control_plane"]: (F5B_REVISIONS, F5B_TRANSFORMATION_VERSION),
@@ -812,8 +827,24 @@ def _retained_replay_inputs(bundle: dict[str, Any]) -> tuple[dict[str, Any], dic
     return control_plane, proposal, moltbot
 
 
-def _expected_replay_revision(bundle: dict[str, Any]) -> str:
+def _replay_candidate(replay_generation: Any, bundle: dict[str, Any]) -> dict[str, str] | None:
+    """The explicitly declared CP2 Replay candidate, or None when none is declared. Anything declared must be an exact registry key and the bundle's selected Control Plane revision must be
+    the candidate's; there is no fallback to another generation."""
+    if replay_generation is None:
+        return None
+    if type(replay_generation) is not str or replay_generation not in CP2_REPLAY_CANDIDATES:
+        raise ImportContractError("unsupported Replay generation candidate")
+    candidate = CP2_REPLAY_CANDIDATES[replay_generation]
+    if _selected_control_plane_revision(bundle) != candidate["control_plane"]:
+        raise ImportContractError("Replay generation candidate is not paired with the selected Control Plane revision")
+    return candidate
+
+
+def _expected_replay_revision(bundle: dict[str, Any], replay_generation: Any = None) -> str:
     """The Replay revision the selected producer generation names (the one whose validator may be trusted for it)."""
+    candidate = _replay_candidate(replay_generation, bundle)
+    if candidate is not None:
+        return candidate["replay"]
     revision = _selected_control_plane_revision(bundle)
     for generation in (V2_REVISIONS, PERSISTENCE_REVISIONS, MERGED_REVISIONS, REFUSAL_REVISIONS, RUNTIME_AUTHORITY_REVISIONS,
                        SECURITY_REVISIONS, F5B_REVISIONS, P4_REVISIONS, P2_REVISIONS, CUR_REVISIONS, CP2_REVISIONS):
@@ -978,7 +1009,7 @@ def _require_pinned_replay_distribution(expected: str) -> None:
         raise ImportContractError(f"imported Replay code is not the code of the installed distribution: {problem}")
 
 
-def _run_pinned_replay_validator(bundle: dict[str, Any]) -> str:
+def _run_pinned_replay_validator(bundle: dict[str, Any], replay_generation: Any = None) -> str:
     control_plane, proposal, moltbot = _retained_replay_inputs(bundle)
     try:
         from agent_replay_bundle.importers import ImportContractError as ReplayImportContractError
@@ -989,7 +1020,7 @@ def _run_pinned_replay_validator(bundle: dict[str, Any]) -> str:
         revision = _selected_control_plane_revision(bundle)
         if revision not in {CONTROL_PLANE_REVISION, *ALL_CONTROL_PLANE_V2_REVISIONS}:
             raise ImportContractError("unsupported Control Plane revision")
-        _require_pinned_replay_distribution(_expected_replay_revision(bundle))
+        _require_pinned_replay_distribution(_expected_replay_revision(bundle, replay_generation))
         if _is_v2(bundle):
             replay_profiles = _accepted_replay_v2_profiles(require_persistence=revision in (CONTROL_PLANE_V2_PERSISTENCE_REVISION, MERGED_REVISIONS["control_plane"]), require_merged=revision == MERGED_REVISIONS["control_plane"], require_refusal=revision == REFUSAL_REVISIONS["control_plane"], require_authority=revision == RUNTIME_AUTHORITY_REVISIONS["control_plane"], require_security=revision == SECURITY_REVISIONS["control_plane"], require_f5b=revision == F5B_REVISIONS["control_plane"], require_p4=revision == P4_REVISIONS["control_plane"], require_p2=revision == P2_REVISIONS["control_plane"], require_cur=revision == CUR_REVISIONS["control_plane"], require_cp2=revision == CP2_REVISIONS["control_plane"])
             cp_profile = next(
@@ -1147,9 +1178,9 @@ def _authorization_summary(counter: Counter[str]) -> str:
     return "unresolved"
 
 
-def _semantic(manifest: dict[str, Any], bundle: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], Counter[str], str]:
+def _semantic(manifest: dict[str, Any], bundle: dict[str, Any], replay_generation: Any = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]], Counter[str], str]:
     actions, findings = _validate_headers(manifest, bundle)
-    validator_status = _run_pinned_replay_validator(bundle)
+    validator_status = _run_pinned_replay_validator(bundle, replay_generation)
     _check_commitments(bundle, manifest)
     grouped = _group(bundle)
     auth: Counter[str] = Counter()
@@ -1576,17 +1607,19 @@ def _freshness_as_of(generated: Any) -> str | None:
     return str(generated)
 
 
-def import_manifest_reconstruction(manifest: dict[str, Any], reconstruction_bundle: dict[str, Any], *, title: str | None = None, generated_at: str | None = None) -> EvidencePack:
+def import_manifest_reconstruction(manifest: dict[str, Any], reconstruction_bundle: dict[str, Any], *, title: str | None = None, generated_at: str | None = None, replay_generation: str | None = None) -> EvidencePack:
     from .admission import admit_value
     manifest = deepcopy(admit_value(_obj(manifest, "manifest"))); bundle = deepcopy(admit_value(_obj(reconstruction_bundle, "reconstruction_bundle")))
-    actions, findings, auth, replay_validator_status = _semantic(manifest, bundle)
+    candidate = _replay_candidate(replay_generation, bundle)
+    # The default call keeps its exact two-argument shape (existing tests replace _semantic with a two-argument stub); only an explicit opt-in passes the extra argument.
+    actions, findings, auth, replay_validator_status = _semantic(manifest, bundle) if replay_generation is None else _semantic(manifest, bundle, replay_generation)
     findings.extend(_replay_findings(bundle))
     errors = sum(f.get("severity") == "error" for f in findings)
     action_items = _make_actions(actions, findings); tool_items = _make_tools(manifest); counts, lifecycle = _state_counts(bundle, auth)
     generated = bundle.get("generated_at") or (bundle.get("metadata", {}) if isinstance(bundle.get("metadata"), dict) else {}).get("source_generated_at") or generated_at or "unavailable"
     if generated == "unavailable": findings.append({"code": "T_GENERATED_AT_UNAVAILABLE", "severity": "warning", "path": "reconstruction_bundle.generated_at", "message": "No source generation timestamp supplied; importer did not invent one."})
     bundle_id = str(bundle.get("bundle_id") or bundle.get("reconstruction_bundle_id") or bundle.get("run_id") or "unknown_bundle")
-    transformation = SECURITY_RUNTIME_GENERATIONS[_selected_control_plane_revision(bundle)][1] if _is_security(bundle) else RUNTIME_AUTHORITY_TRANSFORMATION_VERSION if _is_runtime_authority(bundle) else REFUSAL_TRANSFORMATION_VERSION if _is_refusal_v2(bundle) else MERGED_TRANSFORMATION_VERSION if _is_merged_v2(bundle) else PERSISTENCE_TRANSFORMATION_VERSION if _is_persistence_v2(bundle) else (TRANSFORMATION_VERSION if _is_v2(bundle) else LEGACY_TRANSFORMATION_VERSION)
+    transformation = candidate["transformation_version"] if candidate is not None else SECURITY_RUNTIME_GENERATIONS[_selected_control_plane_revision(bundle)][1] if _is_security(bundle) else RUNTIME_AUTHORITY_TRANSFORMATION_VERSION if _is_runtime_authority(bundle) else REFUSAL_TRANSFORMATION_VERSION if _is_refusal_v2(bundle) else MERGED_TRANSFORMATION_VERSION if _is_merged_v2(bundle) else PERSISTENCE_TRANSFORMATION_VERSION if _is_persistence_v2(bundle) else (TRANSFORMATION_VERSION if _is_v2(bundle) else LEGACY_TRANSFORMATION_VERSION)
     pack_id = "agep-" + sha256({"manifest": sha256(manifest), "bundle": sha256(bundle), "transformation": transformation})[7:23]
     redacted, redaction_source = _redaction_status(bundle, findings)
     evidence_levels = _evidence_levels(bundle, replay_validator_status, findings)
@@ -1596,6 +1629,8 @@ def import_manifest_reconstruction(manifest: dict[str, Any], reconstruction_bund
         trace = pack.metadata["traceable_import"]
         selected_control_plane = _selected_control_plane_revision(bundle)
         selected = _security_revisions(bundle) if _is_security(bundle) else RUNTIME_AUTHORITY_REVISIONS if _is_runtime_authority(bundle) else REFUSAL_REVISIONS if _is_refusal_v2(bundle) else MERGED_REVISIONS if _is_merged_v2(bundle) else PERSISTENCE_REVISIONS if _is_persistence_v2(bundle) else V2_REVISIONS
+        if candidate is not None:
+            selected = {**selected, "replay": candidate["replay"]}
         trace["supported_revisions"].update(selected)
         if _is_persistence_v2(bundle) or _is_refusal_v2(bundle):
             trace["supported_revision_sets"] = ({k: [v] for k, v in _security_revisions(bundle).items()} if _is_security(bundle) else {k: [v] for k, v in RUNTIME_AUTHORITY_REVISIONS.items()} if _is_runtime_authority(bundle) else {k: [v] for k, v in REFUSAL_REVISIONS.items()} if _is_refusal_v2(bundle) else deepcopy(SUPPORTED_REVISION_SETS))
@@ -1613,6 +1648,9 @@ def import_manifest_reconstruction(manifest: dict[str, Any], reconstruction_bund
                 trace["selected_revisions"]["moltbot_safe"] = selected_profiles["cogno-us/moltbot-safe"]
         trace["replay_semantic_validation"]["required_revision"] = selected["replay"]
         trace["input_artifacts"][1]["trusted_revision"] = selected["replay"]
+        if candidate is not None:
+            trace["replay_generation"] = {"id": replay_generation, "replay_revision": candidate["replay"], "control_plane": candidate["control_plane"],
+                                          "moltbot_safe": candidate["moltbot_safe"], "manifest": candidate["manifest"], "opt_in": "caller_declared"}
         if _is_security(bundle):
             trace["input_artifacts"][0]["trusted_revision"] = _security_revisions(bundle)["manifest"]
             trace["executor_failure_reference_verification"] = bundle["metadata"]["executor_failure_reference_verification"]
@@ -1644,12 +1682,12 @@ def import_manifest_reconstruction(manifest: dict[str, Any], reconstruction_bund
     return pack
 
 
-def build_evidence_pack_from_artifacts(manifest: dict[str, Any], reconstruction_bundle: dict[str, Any], *, title: str | None = None, generated_at: str | None = None) -> EvidencePack:
-    return import_manifest_reconstruction(manifest, reconstruction_bundle, title=title, generated_at=generated_at)
+def build_evidence_pack_from_artifacts(manifest: dict[str, Any], reconstruction_bundle: dict[str, Any], *, title: str | None = None, generated_at: str | None = None, replay_generation: str | None = None) -> EvidencePack:
+    return import_manifest_reconstruction(manifest, reconstruction_bundle, title=title, generated_at=generated_at, replay_generation=replay_generation)
 
 
-def build_evidence_pack_from_files(manifest_path: str | Path, reconstruction_path: str | Path, *, title: str | None = None, generated_at: str | None = None) -> EvidencePack:
+def build_evidence_pack_from_files(manifest_path: str | Path, reconstruction_path: str | Path, *, title: str | None = None, generated_at: str | None = None, replay_generation: str | None = None) -> EvidencePack:
     from .admission import loads, read_bytes
     manifest = loads(read_bytes(manifest_path))
     reconstruction_bundle = loads(read_bytes(reconstruction_path))
-    return build_evidence_pack_from_artifacts(manifest, reconstruction_bundle, title=title, generated_at=generated_at)
+    return build_evidence_pack_from_artifacts(manifest, reconstruction_bundle, title=title, generated_at=generated_at, replay_generation=replay_generation)

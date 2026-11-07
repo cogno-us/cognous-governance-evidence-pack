@@ -492,8 +492,11 @@ def validate_evidence_pack(pack: EvidencePack) -> ValidationReport:
             if not isinstance(trace, dict):
                 raise ValueError("trace metadata must be an object")
             sources = trace["retained_sources"]
+            declared = trace.get("replay_generation")
+            if declared is not None and not (isinstance(declared, dict) and type(declared.get("id")) is str):
+                raise ValueError("trace replay_generation declaration is malformed")
             expected = import_manifest_reconstruction(sources["manifest"], sources["reconstruction_bundle"],
-                title=pack.title, generated_at=pack.generated_at)
+                title=pack.title, generated_at=pack.generated_at, replay_generation=declared["id"] if declared is not None else None)
             if trace != expected.metadata["traceable_import"]:
                 raise ValueError("traceable transformation differs from retained source reconstruction")
             actual_dump, expected_dump = pack.model_dump(mode="json"), expected.model_dump(mode="json")
