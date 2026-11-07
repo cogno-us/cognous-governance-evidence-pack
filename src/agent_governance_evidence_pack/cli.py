@@ -51,6 +51,45 @@ def cmd_validate(args: list[str]) -> int:
     return 0 if report.valid else 1
 
 
+# Executor-side record kinds (Replay names them; the importer's EXECUTION_TYPES is the same set). Written out here so the summary does not depend on importing the importer.
+_EXECUTOR_KINDS = ("execution_envelope", "execution_result", "destination_attempt", "destination_attempt_event", "destination_effect", "executor_observation",
+                   "executor_recovery_report", "executor_export_extensions", "moltbot_attributed_control_plane_attempt")
+
+
+def provenance_lines(trace: dict) -> list[str]:
+    """Human-readable source attribution for the lines `summarize` already prints. Presentation only: every value is read from fields the pack already carries (nothing is
+    recomputed, normalised or added to the pack JSON). All records are retained, source-asserted evidence; none is independently verified."""
+    counts = trace.get("derived_counts") or {}
+    lifecycle = trace.get("lifecycle_summary") or {}
+    kinds = trace.get("lifecycle_records") or {}
+    executor_present = sorted(k for k in _EXECUTOR_KINDS if kinds.get(k))
+    cp_attempts, ex_attempts = counts.get("control_plane_attempt_count"), counts.get("executor_attempt_count")
+    out = ["provenance (retained records; source-asserted, none independently verified):"]
+    if executor_present:
+        out.append(f"executor_evidence      : supplied ({', '.join(executor_present)}); executor_attempt_count {ex_attempts}, destination_effect_count "
+                   f"{counts.get('destination_effect_count', 'n/a')}, execution_result_state_counts {counts.get('execution_result_state_counts', 'n/a')}")
+        for record in kinds.get("execution_result") or []:
+            if isinstance(record, dict):
+                out.append(f"executor_result        : status={record.get('status')} acknowledged={record.get('acknowledged')} newly_executed={record.get('newly_executed')}")
+    else:
+        out.append(f"executor_evidence      : NOT supplied; executor_attempt_count {ex_attempts} means no executor records were supplied, it is not a measured zero-execution outcome")
+    out.append(f"control_plane_evidence : control_plane_attempt_count {cp_attempts}, effect_observation_count {counts.get('effect_observation_count', 'n/a')}, "
+               f"reconciliation_count {counts.get('reconciliation_count', 'n/a')} (Control Plane records)")
+    sources = []
+    if isinstance(cp_attempts, int) and cp_attempts > 0:
+        sources.append(f"Control Plane attempts ({cp_attempts})")
+    if isinstance(ex_attempts, int) and ex_attempts > 0:
+        sources.append(f"executor attempts ({ex_attempts})")
+    out.append(f"execution_attempted_source : {lifecycle.get('execution_attempted', 'n/a')} (source: {' and '.join(sources) if sources else 'no attempt records'}"
+               f"{'; no executor attempt records' if not executor_present else ''})")
+    scope = lifecycle.get("destination_observation_scope")
+    out.append(f"destination_observed_source : {lifecycle.get('destination_observed', 'n/a')} (Control Plane reconciliation; "
+               f"{scope if scope else 'retained Control Plane evidence, not a fresh destination query'}; executor destination_effect_count {counts.get('destination_effect_count', 'n/a')})")
+    out.append(f"acknowledgement        : {lifecycle.get('acknowledgement', 'n/a')} (counts {counts.get('acknowledgement_counts', 'n/a')})")
+    out.append(f"independent_verification : {lifecycle.get('independent_verification', 'n/a')}")
+    return out
+
+
 def cmd_summarize(args: list[str]) -> int:
     if not args:
         print("Usage: agep summarize <path/to/evidence_pack.json>", file=sys.stderr)
@@ -72,6 +111,8 @@ def cmd_summarize(args: list[str]) -> int:
         print(f"cp_attempt_count       : {counts.get('control_plane_attempt_count', 'n/a')}")
         print(f"executor_attempt_count : {counts.get('executor_attempt_count', 'n/a')}")
         print(f"destination_observed   : {lifecycle.get('destination_observed', 'n/a')}")
+        for line in provenance_lines(trace):
+            print(line)
     return 0
 
 
