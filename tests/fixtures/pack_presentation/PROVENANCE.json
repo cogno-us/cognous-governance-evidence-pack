@@ -1,0 +1,10 @@
+{
+  "source": "Strict-tenant (tenant-alpha) lost-acknowledgment capture: Control Plane 484fdbd2 authorized, Runtime f7a55e2a Route A executed once with the Runtime's own simulate=lost_ack hook (result reconciled / acknowledged false / newly_executed false), export_execution_artifacts output persisted unmodified, by the S2 harness (orchestrator PR #151 s2_capture.py). Synthetic data, throwaway stores. DEVELOPMENT ONLY, UNQUALIFIED, non-authorizing. The executed (valid) case reuses tests/fixtures/cp2b_replay_candidate. Runtime repository_revision inside the export is caller-asserted.",
+  "producer": {"control_plane": "484fdbd297235dd24148ddb0703f2055a31eabff", "runtime": "f7a55e2a8494801e49193f9f46935f0a971c248d", "manifest": "fa170815ef96a54c233d0dd9da821b60debabf8b"},
+  "sha256": {
+    "lost_ack/capture_summary.json": "ffc7044a025dfd5ead8603b5745df52994d8275d1ee3eb397a855503c1bc3dbe",
+    "lost_ack/control_plane_run.json": "e921e6f5157afe73e5a640b06887e117de4802df7cd2f3538805439aed6f11c8",
+    "lost_ack/proposal.json": "d43ac343139f8c9393ddca4746961d1fc7a4e05bafa5a6c5f446157a53e5178d",
+    "lost_ack/runtime_export.json": "0657bc01b6640a415db856a02563827c7ef81c5135447b4c4cf322863f3278b6"
+  }
+}
